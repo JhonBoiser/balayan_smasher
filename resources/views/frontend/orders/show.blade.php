@@ -24,6 +24,7 @@
                             @else
                             <img src="https://via.placeholder.com/80" class="img-fluid rounded">
                             @endif
+                            
                         </div>
                         <div class="col-md-5">
                             <h6>{{ $item->product_name }}</h6>

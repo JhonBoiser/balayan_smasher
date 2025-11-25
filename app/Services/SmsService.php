@@ -1,8 +1,5 @@
 <?php
-// ============================================
-// SMS SERVICE
-// app/Services/SmsService.php
-// ============================================
+
 namespace App\Services;
 
 use GuzzleHttp\Client;
@@ -20,7 +17,7 @@ class SmsService
     {
         $this->client = new Client([
             'timeout' => 30,
-            'http_errors' => false // Don't throw exceptions on 4xx/5xx
+            'http_errors' => false // Prevent throwing exceptions on 4xx/5xx
         ]);
 
         $this->apiKey = config('services.semaphore.api_key');
@@ -30,14 +27,9 @@ class SmsService
 
     /**
      * Send SMS message
-     *
-     * @param string $phoneNumber
-     * @param string $message
-     * @return array
      */
     public function send($phoneNumber, $message)
     {
-        // Check if API key is configured
         if (empty($this->apiKey)) {
             Log::warning('SMS not sent: SEMAPHORE_API_KEY not configured');
             return [
@@ -47,10 +39,8 @@ class SmsService
         }
 
         try {
-            // Format phone number (remove +63, ensure starts with 0)
             $phoneNumber = $this->formatPhoneNumber($phoneNumber);
 
-            // Validate phone number
             if (!$this->isValidPhoneNumber($phoneNumber)) {
                 Log::error('Invalid phone number format: ' . $phoneNumber);
                 return [
@@ -59,7 +49,6 @@ class SmsService
                 ];
             }
 
-            // Truncate message if too long
             if (strlen($message) > 160) {
                 $message = substr($message, 0, 157) . '...';
             }
@@ -67,7 +56,6 @@ class SmsService
             Log::info('Sending SMS', [
                 'to' => $phoneNumber,
                 'message' => $message,
-                'api_url' => $this->apiUrl
             ]);
 
             $response = $this->client->post($this->apiUrl, [
@@ -88,30 +76,15 @@ class SmsService
                 'response' => $result
             ]);
 
-            // Check if successful
             if ($statusCode == 200 || $statusCode == 201) {
-                // Semaphore returns array of message objects
                 if (is_array($result) && count($result) > 0) {
-                    $messageId = $result[0]['message_id'] ?? null;
-
-                    Log::info('SMS Sent Successfully', [
-                        'phone' => $phoneNumber,
-                        'message_id' => $messageId
-                    ]);
-
                     return [
                         'success' => true,
-                        'message_id' => $messageId,
+                        'message_id' => $result[0]['message_id'] ?? null,
                         'data' => $result
                     ];
                 }
             }
-
-            // Failed response
-            Log::error('SMS Send Failed', [
-                'status_code' => $statusCode,
-                'response' => $result
-            ]);
 
             return [
                 'success' => false,
@@ -120,12 +93,7 @@ class SmsService
             ];
 
         } catch (Exception $e) {
-            Log::error('SMS Send Exception: ' . $e->getMessage(), [
-                'phone' => $phoneNumber,
-                'message' => $message,
-                'exception' => $e->getTraceAsString()
-            ]);
-
+            Log::error('SMS Send Exception: ' . $e->getMessage());
             return [
                 'success' => false,
                 'error' => 'SMS service error: ' . $e->getMessage()
@@ -134,49 +102,7 @@ class SmsService
     }
 
     /**
-     * Format Philippine phone number
-     * Converts various formats to 09XXXXXXXXX
-     *
-     * @param string $phone
-     * @return string
-     */
-    protected function formatPhoneNumber($phone)
-    {
-        // Remove all non-numeric characters
-        $phone = preg_replace('/[^0-9]/', '', $phone);
-
-        // Remove country code +63 or 63
-        if (substr($phone, 0, 3) === '639') {
-            $phone = '0' . substr($phone, 2);
-        } elseif (substr($phone, 0, 2) === '63') {
-            $phone = '0' . substr($phone, 2);
-        }
-
-        // Add leading 0 if not present
-        if (substr($phone, 0, 1) !== '0') {
-            $phone = '0' . $phone;
-        }
-
-        return $phone;
-    }
-
-    /**
-     * Validate Philippine phone number format
-     * Must be 11 digits starting with 09
-     *
-     * @param string $phone
-     * @return bool
-     */
-    protected function isValidPhoneNumber($phone)
-    {
-        // Must be 11 digits and start with 09
-        return preg_match('/^09\d{9}$/', $phone);
-    }
-
-    /**
      * Check account balance
-     *
-     * @return array|null
      */
     public function checkBalance()
     {
@@ -191,10 +117,20 @@ class SmsService
 
             $result = json_decode($response->getBody()->getContents(), true);
 
-            Log::info('SMS Balance Check', ['balance' => $result]);
+            Log::info('SMS Balance Check', ['balance_response' => $result]);
 
-            return $result;
+            // Auto-detect credit/balance field
+            $credits = $result['balance']
+                ?? $result['credits']
+                ?? $result['credit_balance']
+                ?? 'N/A';
 
+            // Normalize output
+            return [
+                'account_id' => $result['account_id'] ?? null,
+                'account_name' => $result['email'] ?? 'Unknown',
+                'credits' => $credits,
+            ];
         } catch (Exception $e) {
             Log::error('Balance Check Error: ' . $e->getMessage());
             return null;
@@ -202,9 +138,7 @@ class SmsService
     }
 
     /**
-     * Test SMS configuration
-     *
-     * @return array
+     * Test configuration and check balance
      */
     public function testConfiguration()
     {
@@ -222,7 +156,6 @@ class SmsService
             ];
         }
 
-        // Try to check balance
         $balance = $this->checkBalance();
 
         if ($balance && isset($balance['account_id'])) {
@@ -230,14 +163,42 @@ class SmsService
                 'configured' => true,
                 'message' => 'SMS service is properly configured',
                 'account_id' => $balance['account_id'],
-                'account_name' => $balance['account_name'] ?? 'N/A',
-                'credits' => $balance['credits'] ?? 'N/A'
+                'account_name' => $balance['account_name'],
+                'credits' => $balance['credits'],
             ];
         }
 
         return [
             'configured' => false,
-            'message' => 'SMS service configured but unable to verify. Check API key.'
+            'message' => 'SMS service configured but unable to verify. Check API key or internet connection.'
         ];
+    }
+
+    /**
+     * Format phone number
+     */
+    protected function formatPhoneNumber($phone)
+    {
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+
+        if (substr($phone, 0, 3) === '639') {
+            $phone = '0' . substr($phone, 2);
+        } elseif (substr($phone, 0, 2) === '63') {
+            $phone = '0' . substr($phone, 2);
+        }
+
+        if (substr($phone, 0, 1) !== '0') {
+            $phone = '0' . $phone;
+        }
+
+        return $phone;
+    }
+
+    /**
+     * Validate phone number format
+     */
+    protected function isValidPhoneNumber($phone)
+    {
+        return preg_match('/^09\d{9}$/', $phone);
     }
 }

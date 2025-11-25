@@ -26,7 +26,7 @@ class OrderController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('admin.orders.index', compact('orders'));
+        return view('frontend.orders.index', compact('orders'));
     }
 
     public function show($id)
@@ -34,7 +34,7 @@ class OrderController extends Controller
         $order = Order::with(['user', 'items.product.primaryImage'])
             ->findOrFail($id);
 
-        return view('admin.orders.show', compact('order'));
+        return view('frontend.orders.show', compact('order'));
     }
 
     public function updateStatus(Request $request, $id)

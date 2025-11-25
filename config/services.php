@@ -14,11 +14,12 @@ return [
     |
     */
 
-    'semaphore' => [
-        'api_key' => env('d9925070033a48661de6ea5482fc9263'),
-        'sender_name' => env('SEMAPHORE_SENDER_NAME', 'Smashers Hub'),
-        'api_url' => 'https://api.semaphore.co/api/v4/messages',
-    ],
+   'semaphore' => [
+    'api_key' => env('SEMAPHORE_API_KEY', 'd9925070033a48661de6ea5482fc9263'),
+    'sender_name' => env('SEMAPHORE_SENDER_NAME', 'Smashers Hub'),
+    'api_url' => 'https://api.semaphore.co/api/v4/messages',
+],
+
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),

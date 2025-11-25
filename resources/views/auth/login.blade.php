@@ -3,137 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - Balayan Smashers Hub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --primary-color: #4361ee;
-            --primary-light: #4895ef;
-            --secondary-color: #3f37c9;
-            --success-color: #4cc9f0;
-            --light-bg: #f8f9fa;
-            --dark-text: #212529;
-            --border-radius: 12px;
-            --shadow: 0 10px 20px rgba(0,0,0,0.05);
-            --transition: all 0.3s ease;
-        }
-
         body {
-            background: url("https://scontent.fmnl17-6.fna.fbcdn.net/v/t39.30808-6/528606912_122164303472392515_5841549823835529491_n.jpg?stp=cp6_dst-jpg_tt6&_nc_cat=109&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeFFAWIZnSqRpTbPixURpsqDSns-POsxGJxKez486zEYnGvMfF8VCSg8kEGVEN1howQ6hdsh2RDECho6-0LTrY5S&_nc_ohc=kEZ8PK5kXR0Q7kNvwGvJoCp&_nc_oc=AdkO9pwB6-HAL0WkT2pZ6hHbMykdNznF1O0JllPKtmGh-U9IZRfP104zmsDSnjPmvKY&_nc_zt=23&_nc_ht=scontent.fmnl17-6.fna&_nc_gid=tAGMvbHw6eGhgTk2XhX7dA&oh=00_Afg3uex0vo9tM__pbb3K2AG34NafJp3LLF4_-mEsPfKqPg&oe=691349CA");
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
+            position: relative;
+            overflow-x: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        .login-card {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            transition: var(--transition);
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://th.bing.com/th/id/R.51f15701309e54aa15d2371e89263c1a?rik=sYtWXHPPSExZHg&riu=http%3a%2f%2fwww.publicdomainpictures.net%2fpictures%2f210000%2fvelka%2fshuttlecocks-and-badminton-racket.jpg&ehk=gW3YLLv5b0CRD5iea7AxRode%2b666PuGjx2HZDqFa6aE%3d&risl=&pid=ImgRaw&r=0');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+            z-index: 0;
         }
 
-        .login-card:hover {
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        .login-wrapper {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 45px 16px 32px;
         }
 
-        .card-header {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            color: white;
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 36px 32px;
+            border-radius: 18px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 420px;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .brand-section {
             text-align: center;
-            padding: 1.5rem;
-            font-weight: 600;
-            font-size: 1.5rem;
-            border-bottom: none;
+            margin-bottom: 28px;
         }
 
-        .card-body {
-            padding: 2rem;
+        .brand-logo {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            margin-bottom: 12px;
+            animation: float 3s ease-in-out infinite;
+            object-fit: cover;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .brand-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 7px;
+            color: #333;
+            font-weight: 600;
+            font-size: 13px;
         }
 
         .form-control {
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            border: 1px solid #e1e5ee;
-            transition: var(--transition);
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            color: #1a1a1a;
+        }
+
+        .form-control::placeholder {
+            color: #999;
+        }
+
+        .form-control:hover {
+            border-color: #6ba932;
+            background: #fff;
         }
 
         .form-control:focus {
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+            outline: none;
+            border-color: #6ba932;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(107, 169, 50, 0.1);
         }
 
-        .input-group-text {
-            background-color: white;
-            border-right: none;
-            color: var(--primary-color);
+        .form-control.is-invalid {
+            border-color: #dc3545;
+            background: #fff;
         }
 
-        .input-group .form-control {
-            border-left: none;
+        .password-wrapper {
+            position: relative;
         }
 
-        .input-group .form-control:focus {
-            border-left: none;
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 7px;
+            color: #666;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+        }
+
+        .password-toggle:hover {
+            color: #6ba932;
+            background: rgba(107, 169, 50, 0.1);
+        }
+
+        .password-toggle i {
+            font-size: 16px;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .form-check {
+            margin-bottom: 0;
+        }
+
+        .form-check-input {
+            margin-right: 8px;
+        }
+
+        .form-check-input:checked {
+            background-color: #6ba932;
+            border-color: #6ba932;
+        }
+
+        .form-check-label {
+            font-size: 13px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .forgot-password a {
+            color: #6ba932;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: #5a9028;
+            text-decoration: underline;
         }
 
         .btn-login {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            border: none;
-            color: white;
-            padding: 0.75rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: var(--transition);
             width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #6ba932 0%, #5a9028 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            box-shadow: 0 3px 12px rgba(107, 169, 50, 0.3);
         }
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+            box-shadow: 0 6px 20px rgba(107, 169, 50, 0.4);
+            background: linear-gradient(135deg, #5a9028 0%, #4a7820 100%);
         }
 
-        .form-check-input:checked {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .forgot-password {
-            color: var(--primary-color);
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .forgot-password:hover {
-            color: var(--secondary-color);
-            text-decoration: underline;
+        .btn-login:active {
+            transform: translateY(0);
         }
 
         .divider {
             display: flex;
             align-items: center;
-            margin: 1.5rem 0;
+            text-align: center;
+            margin: 20px 0;
+            color: #999;
+            font-size: 12px;
         }
 
-        .divider::before, .divider::after {
-            content: "";
+        .divider::before,
+        .divider::after {
+            content: '';
             flex: 1;
-            border-bottom: 1px solid #e1e5ee;
+            border-bottom: 1px solid #e0e0e0;
         }
 
-        .divider-text {
-            padding: 0 1rem;
-            color: #6c757d;
-            font-size: 0.875rem;
+        .divider span {
+            padding: 0 12px;
+            font-weight: 600;
         }
 
         .social-login {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .social-btn {
@@ -144,14 +269,15 @@
             height: 40px;
             border-radius: 50%;
             background: white;
-            border: 1px solid #e1e5ee;
-            color: #6c757d;
-            transition: var(--transition);
+            border: 1px solid #e0e0e0;
+            color: #666;
+            transition: all 0.3s ease;
+            text-decoration: none;
         }
 
         .social-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .social-btn.google:hover {
@@ -169,150 +295,211 @@
             border-color: #1DA1F2;
         }
 
-        .register-link {
+        .signup-section {
             text-align: center;
-            margin-top: 1.5rem;
-            color: #6c757d;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 16px;
         }
 
-        .register-link a {
-            color: var(--primary-color);
+        .signup-section p {
+            margin: 0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .signup-section a {
+            color: #6ba932;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 700;
+            transition: all 0.3s ease;
         }
 
-        .register-link a:hover {
+        .signup-section a:hover {
+            color: #5a9028;
             text-decoration: underline;
         }
 
         .invalid-feedback {
             display: block;
-            margin-top: 0.25rem;
-            font-size: 0.875rem;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #dc3545;
+            font-weight: 500;
         }
 
+        /* Responsive */
         @media (max-width: 576px) {
-            .card-body {
-                padding: 1.5rem;
+            .login-wrapper {
+                padding: 32px 12px 24px;
+            }
+
+            .login-container {
+                padding: 28px 20px;
+                border-radius: 14px;
+                max-width: 100%;
+            }
+
+            .brand-logo {
+                width: 72px;
+                height: 72px;
+            }
+
+            .brand-title {
+                font-size: 21px;
+            }
+
+            .brand-subtitle {
+                font-size: 12px;
+            }
+
+            .form-control {
+                padding: 11px 13px;
+                font-size: 13px;
+            }
+
+            .btn-login {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .form-label {
+                font-size: 12px;
+            }
+
+            .form-options {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .forgot-password {
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .login-container {
+                padding: 24px 16px;
+            }
+
+            .brand-title {
+                font-size: 19px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                <div class="login-card card">
-                    <div class="card-header">
-                        <i class="fas fa-user-circle me-2"></i>Welcome Back
-                    </div>
+    <div class="login-wrapper">
+        <div class="login-container">
+            <!-- Brand Section -->
+            <div class="brand-section">
+                <img src="https://tse1.mm.bing.net/th/id/OIP.iyU99v5mL6DEKe2bKcn8kAHaHa?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Balayan Smashers Hub" class="brand-logo">
+                <h1 class="brand-title">Welcome Back</h1>
+                <p class="brand-subtitle">Sign in to continue to your account</p>
+            </div>
 
-                    <div class="card-body">
-                        <form method="POST" action="{{ route('login') }}">
-                            @csrf
+            <!-- Social Login Options -->
+            <div class="social-login">
+                <a href="#" class="social-btn google">
+                    <i class="fab fa-google"></i>
+                </a>
+                <a href="#" class="social-btn facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="#" class="social-btn twitter">
+                    <i class="fab fa-twitter"></i>
+                </a>
+            </div>
 
-                            <!-- Social Login Options -->
-                            <div class="social-login">
-                                <a href="#" class="social-btn google">
-                                    <i class="fab fa-google"></i>
-                                </a>
-                                <a href="#" class="social-btn facebook">
-                                    <i class="fab fa-facebook-f"></i>
-                                </a>
-                                <a href="#" class="social-btn twitter">
-                                    <i class="fab fa-twitter"></i>
-                                </a>
-                            </div>
+            <div class="divider">
+                <span>OR</span>
+            </div>
 
-                            <div class="divider">
-                                <span class="divider-text">Or sign in with email</span>
-                            </div>
+            <!-- Login Form -->
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
 
-                            <!-- Email Field -->
-                            <div class="mb-4">
-                                <label for="email" class="form-label fw-semibold">{{ __('Email Address') }}</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-envelope"></i>
-                                    </span>
-                                    <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus placeholder="Enter your email">
-                                </div>
-                                @error('email')
-                                    <span class="invalid-feedback d-block" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-
-                            <!-- Password Field -->
-                            <div class="mb-4">
-                                <label for="password" class="form-label fw-semibold">{{ __('Password') }}</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-lock"></i>
-                                    </span>
-                                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="Enter your password">
-                                    <span class="input-group-text toggle-password" style="cursor: pointer;">
-                                        <i class="fas fa-eye"></i>
-                                    </span>
-                                </div>
-                                @error('password')
-                                    <span class="invalid-feedback d-block" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-
-                            <!-- Remember Me & Forgot Password -->
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="remember">
-                                        {{ __('Remember Me') }}
-                                    </label>
-                                </div>
-
-                                @if (Route::has('password.request'))
-                                    <a class="forgot-password" href="{{ route('password.request') }}">
-                                        {{ __('Forgot Your Password?') }}
-                                    </a>
-                                @endif
-                            </div>
-
-                            <!-- Submit Button -->
-                            <div class="d-grid mb-4">
-                                <button type="submit" class="btn btn-login">
-                                    <i class="fas fa-sign-in-alt me-2"></i>{{ __('Login') }}
-                                </button>
-                            </div>
-
-                            <!-- Register Link -->
-                            <div class="register-link">
-                                Don't have an account? <a href="{{ route('register') }}">Sign up</a>
-                            </div>
-                        </form>
-                    </div>
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label for="email" class="form-label">{{ __('Email Address') }}</label>
+                    <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus placeholder="Enter your email">
+                    @error('email')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
                 </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="password" class="form-label">{{ __('Password') }}</label>
+                    <div class="password-wrapper">
+                        <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="Enter your password" style="padding-right: 45px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i class="fas fa-eye" id="toggleIcon"></i>
+                        </button>
+                    </div>
+                    @error('password')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="form-options">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="remember">
+                            {{ __('Remember Me') }}
+                        </label>
+                    </div>
+
+                    @if (Route::has('password.request'))
+                        <div class="forgot-password">
+                            <a href="{{ route('password.request') }}">
+                                {{ __('Forgot Your Password?') }}
+                            </a>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt me-2"></i>{{ __('Sign In') }}
+                </button>
+            </form>
+
+            <!-- Register Link -->
+            <div class="signup-section">
+                <p>Don't have an account? <a href="{{ route('register') }}">Create Account</a></p>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Toggle password visibility
-        document.querySelector('.toggle-password').addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            const icon = this.querySelector('i');
+        function togglePassword() {
+            const passwordField = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
 
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
             } else {
-                passwordInput.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
             }
+        }
+
+        // Add animation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginContainer = document.querySelector('.login-container');
+            loginContainer.style.animation = 'slideUp 0.6s ease';
         });
     </script>
 </body>
