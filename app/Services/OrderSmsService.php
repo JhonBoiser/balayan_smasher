@@ -1,148 +1,172 @@
 <?php
-
+// ============================================
+// ORDER SMS SERVICE
+// app/Services/OrderSmsService.php
+// ============================================
 namespace App\Services;
 
 use App\Models\Order;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class OrderSmsService
 {
+    protected $smsService;
+
+    public function __construct(SmsService $smsService)
+    {
+        $this->smsService = $smsService;
+    }
+
     /**
-     * Send order processing notification
+     * Send order placed SMS
+     */
+    public function sendOrderPlaced(Order $order)
+    {
+        $message = "Hi {$order->shipping_name}! Your order #{$order->order_number} has been received. "
+                 . "Total: ₱" . number_format((float)$order->total, 2) . ". "
+                 . "Thank you for shopping at Balayan Smashers Hub!";
+
+        return $this->sendSms($order, $message, 'Order Placed');
+    }
+
+    /**
+     * Send order processing SMS
      */
     public function sendOrderProcessing(Order $order)
     {
-        $message = "Hi {$order->user->name}, your order #{$order->order_number} is being processed. We'll notify you when it ships. Thank you!";
-        return $this->sendCustomSms($order, $message);
+        $message = "Good news! Your order #{$order->order_number} is now being processed. "
+                 . "We'll notify you once it ships. - Balayan Smashers Hub";
+
+        return $this->sendSms($order, $message, 'Order Processing');
     }
 
     /**
-     * Send order shipped notification
+     * Send order shipped SMS
      */
     public function sendOrderShipped(Order $order, $trackingNumber = null)
     {
-        $trackingInfo = $trackingNumber ? " Tracking #: {$trackingNumber}" : "";
-        $message = "Hi {$order->user->name}, your order #{$order->order_number} has been shipped.{$trackingInfo} Expected delivery: 3-5 business days.";
-        return $this->sendCustomSms($order, $message);
+        $message = "Your order #{$order->order_number} has been shipped! ";
+
+        if ($trackingNumber) {
+            $message .= "Tracking: {$trackingNumber}. ";
+        }
+
+        $message .= "Expected delivery: 3-5 days. - Balayan Smashers Hub";
+
+        return $this->sendSms($order, $message, 'Order Shipped');
     }
 
     /**
-     * Send order delivered notification
+     * Send order delivered SMS
      */
     public function sendOrderDelivered(Order $order)
     {
-        $message = "Hi {$order->user->name}, your order #{$order->order_number} has been delivered. Thank you for shopping with us!";
-        return $this->sendCustomSms($order, $message);
+        $message = "Your order #{$order->order_number} has been delivered! "
+                 . "We hope you enjoy your purchase. Thank you for choosing Balayan Smashers Hub!";
+
+        return $this->sendSms($order, $message, 'Order Delivered');
     }
 
     /**
-     * Send order cancelled notification
-     */
-    public function sendOrderCancelled(Order $order)
-    {
-        $message = "Hi {$order->user->name}, your order #{$order->order_number} has been cancelled. Contact support for details.";
-        return $this->sendCustomSms($order, $message);
-    }
-
-    /**
-     * Send payment received notification
+     * Send payment received SMS
      */
     public function sendPaymentReceived(Order $order)
     {
-        $message = "Hi {$order->user->name}, payment for order #{$order->order_number} has been confirmed. Thank you!";
-        return $this->sendCustomSms($order, $message);
+        $message = "Payment confirmed for order #{$order->order_number}. "
+                 . "Amount: ₱" . number_format((float)$order->total, 2) . ". "
+                 . "Your order will be processed shortly. - Balayan Smashers Hub";
+
+        return $this->sendSms($order, $message, 'Payment Received');
     }
 
     /**
-     * Send generic order update notification
+     * Send order cancelled SMS
      */
-    public function sendOrderUpdate(Order $order)
+    public function sendOrderCancelled(Order $order)
     {
-        $message = "Hi {$order->user->name}, your order #{$order->order_number} status has been updated to: " . ucfirst($order->status) . ".";
-        return $this->sendCustomSms($order, $message);
+        $message = "Your order #{$order->order_number} has been cancelled. "
+                 . "If you have questions, call us at +63 906 623 8257. - Balayan Smashers Hub";
+
+        return $this->sendSms($order, $message, 'Order Cancelled');
     }
 
     /**
-     * Send custom SMS message
+     * Send payment reminder SMS
      */
-    public function sendCustomSms(Order $order, $message)
+    public function sendPaymentReminder(Order $order)
     {
-        if (empty($order->user->phone)) {
-            throw new \Exception('No phone number available for this customer.');
+        $message = "Reminder: Payment pending for order #{$order->order_number}. "
+                 . "Total: ₱" . number_format((float)$order->total, 2) . ". "
+                 . "Please settle payment to process your order. - Balayan Smashers Hub";
+
+        return $this->sendSms($order, $message, 'Payment Reminder');
+    }
+
+    /**
+     * Send custom SMS to customer
+     */
+    public function sendCustomMessage(Order $order, $message)
+    {
+        $fullMessage = "Balayan Smashers Hub: {$message} - Order #{$order->order_number}";
+
+        return $this->sendSms($order, $fullMessage, 'Custom Message');
+    }
+
+    /**
+     * Send SMS (internal helper method)
+     *
+     * @param Order $order
+     * @param string $message
+     * @param string $type
+     * @return array
+     */
+    protected function sendSms(Order $order, $message, $type = 'SMS')
+    {
+        $phone = $order->shipping_phone;
+
+        // Validate phone number exists
+        if (empty($phone)) {
+            Log::warning("No phone number for order #{$order->order_number}");
+            return [
+                'success' => false,
+                'error' => 'No phone number provided'
+            ];
         }
 
-        $phone = $this->formatPhoneNumber($order->user->phone);
-
-        Log::info("SMS would be sent to {$phone}: {$message}");
-
-
-        return $this->sendViaSmsGateway($phone, $message);
-    }
-
-    /**
-     * Format phone number for SMS gateway
-     */
-    protected function formatPhoneNumber($phone)
-    {
-        // Remove any non-numeric characters
-        $phone = preg_replace('/[^0-9]/', '', $phone);
-
-        // Add country code if missing (Philippines +63)
-        if (strlen($phone) === 10 && substr($phone, 0, 1) === '9') {
-            $phone = '63' . $phone;
-        }
-
-        return $phone;
-    }
-
-    /**
-     * Send SMS via actual gateway (implement based on your provider)
-     */
-    protected function sendViaSmsGateway($phone, $message)
-    {
-        // Example using Semaphore SMS API
-        $response = Http::post('https://api.semaphore.co/api/v4/messages', [
-            'apikey' => env('d9925070033a48661de6ea5482fc9263'),
-            'number' => $phone,
-            'message' => $message,
-            'sendername' => env('SMS_SENDER_NAME', 'YourStore')
+        Log::info("Sending {$type} SMS", [
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'phone' => $phone,
+            'type' => $type
         ]);
 
-        if (!$response->successful()) {
-            throw new \Exception('SMS gateway error: ' . $response->body());
+        $result = $this->smsService->send($phone, $message);
+
+        if ($result['success']) {
+            Log::info("{$type} SMS sent successfully", [
+                'order_id' => $order->id,
+                'message_id' => $result['message_id'] ?? null
+            ]);
+        } else {
+            Log::error("{$type} SMS failed", [
+                'order_id' => $order->id,
+                'error' => $result['error'] ?? 'Unknown error'
+            ]);
         }
 
-        return $response->json();
-
-
-        // For now, just log the SMS (remove this when implementing real SMS)
-        Log::info("SMS Notification", [
-            'to' => $phone,
-            'message' => $message,
-            'length' => strlen($message)
-        ]);
-
-        return ['success' => true, 'message' => 'SMS logged successfully'];
+        return $result;
     }
 
     /**
-     * Generate status-based message
+     * Send low stock alert to admin
      */
-    protected function generateStatusMessage(Order $order)
+    public function sendLowStockAlert($products, $adminPhone)
     {
-        switch ($order->status) {
-            case 'processing':
-                return "Hi {$order->user->name}, your order #{$order->order_number} is being processed. We'll notify you when it ships.";
-            case 'shipped':
-                $tracking = $order->tracking_number ? " Tracking: {$order->tracking_number}" : "";
-                return "Hi {$order->user->name}, your order #{$order->order_number} has been shipped.{$tracking}";
-            case 'delivered':
-                return "Hi {$order->user->name}, your order #{$order->order_number} has been delivered. Thank you for shopping with us!";
-            case 'cancelled':
-                return "Hi {$order->user->name}, your order #{$order->order_number} has been cancelled. Contact support for details.";
-            default:
-                return "Hi {$order->user->name}, your order #{$order->order_number} status has been updated to {$order->status}.";
-        }
+        $productNames = $products->pluck('name')->take(3)->implode(', ');
+
+        $message = "LOW STOCK ALERT: {$products->count()} products need restocking including: {$productNames}. "
+                 . "Check admin panel for details.";
+
+        return $this->smsService->send($adminPhone, $message);
     }
 }

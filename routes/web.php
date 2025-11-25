@@ -101,12 +101,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [AdminOrderController::class, 'index'])->name('index');
         Route::get('/{id}', [AdminOrderController::class, 'show'])->name('show');
+
+        // Real-time update check
+        Route::get('/{id}/check-updates', [AdminOrderController::class, 'checkUpdates'])->name('check-updates');
+
+        // AJAX endpoints for updates
         Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('status');
         Route::patch('/{id}/payment', [AdminOrderController::class, 'updatePaymentStatus'])->name('payment');
 
-        // NEW ROUTES: Individual notification routes
+        // Email and SMS endpoints
         Route::post('/{id}/send-email', [AdminOrderController::class, 'sendEmail'])->name('send-email');
         Route::post('/{id}/send-sms', [AdminOrderController::class, 'sendSms'])->name('send-sms');
+
+        // Additional features
+        Route::get('/export', [AdminOrderController::class, 'export'])->name('export');
+        Route::post('/bulk-update', [AdminOrderController::class, 'bulkUpdateStatus'])->name('bulk-update');
+        Route::delete('/{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
     });
 });
 

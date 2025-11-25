@@ -96,6 +96,8 @@
             padding: 2px 6px;
             font-size: 0.75rem;
         }
+
+
     </style>
 
     @yield('styles')

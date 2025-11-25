@@ -33,14 +33,15 @@ resources/views/frontend/products/show.blade.php
                             </div>
                             @endforeach
                         </div>
-                        @if($product->images->count() > 1)
-                        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon"></span>
+                       @if($product->images->count() > 1)
+                        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev" style="width: 50px; background: transparent; border: none;">
+                            <span class="visually-hidden">Previous</span>
                         </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
-                            <span class="carousel-control-next-icon"></span>
+                        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next" style="width: 50px; background: transparent; border: none;">
+                            <span class="visually-hidden">Next</span>
                         </button>
                         @endif
+
                     </div>
                 @else
                     <img src="https://tse2.mm.bing.net/th/id/OIP.Em_MJNuvUgNU33oSE66ReQHaHa?pid=Api&P=0&h=180" class="card-img-top">
