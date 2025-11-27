@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\SearchController;
 use Illuminate\Support\Facades\Auth;
 
 // PUBLIC ROUTES
@@ -56,6 +57,12 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Admin Search Routes
+    Route::prefix('search')->name('search.')->group(function () {
+        Route::get('/', [SearchController::class, 'globalSearch'])->name('global');
+        Route::get('/advanced', [SearchController::class, 'advancedSearch'])->name('advanced');
+    });
+
     // Admin Products
     Route::resource('products', AdminProductController::class);
     Route::delete('products/{id}/image/{imageId}', [AdminProductController::class, 'deleteImage'])->name('products.image.delete');
@@ -68,6 +75,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [AdminOrderController::class, 'index'])->name('index');
         Route::get('/{id}', [AdminOrderController::class, 'show'])->name('show');
         Route::get('/{id}/check-updates', [AdminOrderController::class, 'checkUpdates'])->name('check-updates');
+        Route::get('/recent', [AdminOrderController::class, 'getRecentOrders'])->name('recent'); // ADDED THIS LINE
         Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('status');
         Route::patch('/{id}/payment', [AdminOrderController::class, 'updatePaymentStatus'])->name('payment');
         Route::post('/{id}/send-email', [AdminOrderController::class, 'sendEmail'])->name('send-email');

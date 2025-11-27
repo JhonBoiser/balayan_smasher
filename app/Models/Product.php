@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -71,5 +72,57 @@ class Product extends Model
     public function isLowStock()
     {
         return $this->stock <= $this->low_stock_threshold && $this->stock > 0;
+    }
+
+    /**
+     * Get the display image for the product
+     */
+    public function getDisplayImage()
+    {
+        if ($this->primaryImage) {
+            return $this->primaryImage;
+        }
+
+        return $this->images->first();
+    }
+
+    /**
+     * Get the display image URL for the product
+     */
+    public function getDisplayImageUrl()
+    {
+        $image = $this->getDisplayImage();
+
+        if ($image) {
+            // Check if file exists in storage
+            if (Storage::disk('public')->exists($image->image_path)) {
+                return Storage::url($image->image_path);
+            }
+
+            // Fallback to asset helper
+            return asset('storage/' . $image->image_path);
+        }
+
+        return 'https://via.placeholder.com/300x300?text=No+Image';
+    }
+
+    /**
+     * Get image URL for a specific product image
+     */
+    public function getImageUrl($imagePath)
+    {
+        if (Storage::disk('public')->exists($imagePath)) {
+            return Storage::url($imagePath);
+        }
+
+        return asset('storage/' . $imagePath);
+    }
+
+    /**
+     * Check if product has any images
+     */
+    public function hasImages()
+    {
+        return $this->images->count() > 0;
     }
 }

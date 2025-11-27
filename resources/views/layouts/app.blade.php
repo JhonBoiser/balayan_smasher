@@ -632,7 +632,7 @@
                 </a>
             </div>
 
-            {{-- In your app.blade.php file, update the nav-menu section --}}
+            {{-- Navigation Menu --}}
             <nav>
                 <ul class="nav-menu" id="navMenu">
                     <li><a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
@@ -643,8 +643,8 @@
                             class="{{ request()->routeIs('about') ? 'active' : '' }}">About</a></li>
                     <li><a href="{{ route('contact') }}"
                             class="{{ request()->routeIs('contact') ? 'active' : '' }}">Contact</a></li>
-                    {{-- Add this line --}}
 
+                    {{-- My Orders - Only for authenticated customers --}}
                     @auth
                         @if (auth()->user()->isCustomer())
                             <li><a href="{{ route('orders.index') }}"
@@ -687,6 +687,22 @@
                             <i class="fas fa-chevron-down" style="font-size: 12px;"></i>
                         </button>
                         <div class="dropdown-menu" id="userDropdown">
+                            {{-- My Orders in dropdown for customers --}}
+                            @if (auth()->user()->isCustomer())
+                                <a href="{{ route('orders.index') }}" class="dropdown-item">
+                                    <i class="fas fa-shopping-bag"></i>
+                                    <span>My Orders</span>
+                                </a>
+                            @endif
+
+                            {{-- Admin Dashboard in dropdown --}}
+                            @if (auth()->user()->isAdmin())
+                                <a href="{{ route('admin.dashboard') }}" class="dropdown-item">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    <span>Admin Dashboard</span>
+                                </a>
+                            @endif
+
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                 @csrf
                             </form>
@@ -762,20 +778,25 @@
                         </div>
                     </div>
                 </div>
-                {{-- In your app.blade.php footer section, update the quick links --}}
+
+                {{-- Quick Links --}}
                 <div class="footer-section">
                     <h3 class="footer-title">Quick Links</h3>
                     <div class="footer-links">
                         <a href="{{ route('home') }}" class="footer-link">Home</a>
                         <a href="{{ route('products.index') }}" class="footer-link">Products</a>
                         <a href="{{ route('about') }}" class="footer-link">About</a>
-                        <a href="{{ route('contact') }}" class="footer-link">Contact</a> {{-- Add this line --}}
+                        <a href="{{ route('contact') }}" class="footer-link">Contact</a>
                         <a href="{{ route('cart.index') }}" class="footer-link">Cart</a>
+                        {{-- My Orders in footer for authenticated customers --}}
                         @auth
-                            <a href="{{ route('orders.index') }}" class="footer-link">My Orders</a>
+                            @if (auth()->user()->isCustomer())
+                                <a href="{{ route('orders.index') }}" class="footer-link">My Orders</a>
+                            @endif
                         @endauth
                     </div>
                 </div>
+
                 <!-- Support Section -->
                 <div class="footer-section">
                     <h3 class="footer-title">Support</h3>

@@ -1,3 +1,7 @@
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 @extends('layouts.app')
 
 @section('title', 'Balayan Smashers Hub - Quality Sports Equipment')
@@ -588,11 +592,8 @@
                         {{ $product->isInStock() ? ($product->isLowStock() ? 'Low Stock' : 'In Stock') : 'Out of Stock' }}
                     </span>
 
-                    @if($product->primaryImage)
-                        <img src="{{ asset('storage/' . $product->primaryImage->image_path) }}" alt="{{ $product->name }}">
-                    @else
-                        <img src="https://via.placeholder.com/300x300?text=No+Image" alt="{{ $product->name }}">
-                    @endif
+                    <!-- Fixed Image Display -->
+                    <img src="{{ $product->getDisplayImageUrl() }}" alt="{{ $product->name }}" onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
                 </div>
                 <div class="product-info">
                     <div class="product-category">{{ $product->category->name }}</div>

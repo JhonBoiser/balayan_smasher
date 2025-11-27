@@ -63,25 +63,24 @@
                             @endif
                         </td>
                         <td>
-                            <div class="btn-group btn-group-sm table-actions" role="group">
+                            <div class="btn-group btn-group-sm" role="group">
                                 <button type="button"
                                         class="btn btn-outline-primary"
                                         data-bs-toggle="modal"
                                         data-bs-target="#editCategoryModal{{ $category->id }}"
                                         title="Edit">
-                                    <i class="bi bi-pencil"></i>
+                                    <i class="bi bi-pencil"></i> Edit
                                 </button>
                                 <form action="{{ route('admin.categories.destroy', $category->id) }}"
                                       method="POST"
                                       class="d-inline"
-                                      onsubmit="return confirm('Are you sure? This will also affect {{ $category->products_count }} products.');">
+                                      onsubmit="return confirm('Are you sure? This will delete {{ $category->products_count }} products associated with this category.');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
                                             class="btn btn-outline-danger"
-                                            title="Delete"
-                                            {{ $category->products_count > 0 ? 'disabled' : '' }}>
-                                        <i class="bi bi-trash"></i>
+                                            title="Delete">
+                                        <i class="bi bi-trash"></i> Delete
                                     </button>
                                 </form>
                             </div>

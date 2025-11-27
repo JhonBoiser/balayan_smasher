@@ -31,8 +31,12 @@
                     @forelse($products as $product)
                     <tr>
                         <td>
-                            @if($product->primaryImage)
-                                <img src="{{ asset('storage/' . $product->primaryImage->image_path) }}"
+                            @php
+                                $displayImage = $product->primaryImage ?? $product->images->first() ?? null;
+                            @endphp
+
+                            @if($displayImage)
+                                <img src="{{ asset('storage/' . $displayImage->image_path) }}"
                                      alt="{{ $product->name }}"
                                      class="img-thumbnail"
                                      style="width: 60px; height: 60px; object-fit: cover;">
@@ -50,7 +54,7 @@
                             @endif
                         </td>
                         <td>
-                            <span class="badge bg-secondary">{{ $product->category->name }}</span>
+                            <span class="badge bg-secondary">{{ $product->category->name ?? 'N/A' }}</span>
                         </td>
                         <td><code>{{ $product->sku }}</code></td>
                         <td>
@@ -81,11 +85,11 @@
                             @endif
                         </td>
                         <td>
-                            <div class="btn-group btn-group-sm table-actions" role="group">
+                            <div class="btn-group btn-group-sm" role="group">
                                 <a href="{{ route('admin.products.edit', $product->id) }}"
                                    class="btn btn-outline-primary"
                                    title="Edit">
-                                    <i class="bi bi-pencil"></i>
+                                    <i class="bi bi-pencil"></i> Edit
                                 </a>
                                 <form action="{{ route('admin.products.destroy', $product->id) }}"
                                       method="POST"
@@ -94,7 +98,7 @@
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger" title="Delete">
-                                        <i class="bi bi-trash"></i>
+                                        <i class="bi bi-trash"></i> Delete
                                     </button>
                                 </form>
                             </div>

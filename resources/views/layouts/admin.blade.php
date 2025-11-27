@@ -1,4 +1,3 @@
-{{-- resources/views/layouts/admin.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,8 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel') - Balayan Smashers Hub</title>
 
+    <!-- Fixed Font Awesome link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -126,6 +126,13 @@
             border-radius: 20px;
             border: 1px solid var(--border-color);
             background-color: var(--light-bg);
+            transition: all 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 2px rgba(0, 177, 79, 0.1);
         }
 
         .search-bar i {
@@ -134,6 +141,106 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--gray-text);
+        }
+
+        /* Search Results Dropdown */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            margin-top: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1050;
+            display: none;
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-result-item:hover {
+            background-color: var(--light-green);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .result-info {
+            flex: 1;
+        }
+
+        .result-title {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .result-meta {
+            font-size: 0.8rem;
+            color: var(--gray-text);
+        }
+
+        .result-type {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--light-bg);
+            color: var(--gray-text);
+        }
+
+        .search-section {
+            padding: 10px 15px;
+            background: var(--light-bg);
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--gray-text);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: var(--gray-text);
+        }
+
+        .view-all-results {
+            padding: 12px 15px;
+            text-align: center;
+            background: var(--light-bg);
+            color: var(--primary-green);
+            font-weight: 500;
+            cursor: pointer;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .view-all-results:hover {
+            background: var(--light-green);
         }
 
         .user-info {
@@ -154,12 +261,25 @@
             margin-right: 10px;
         }
 
-        .notification-badge {
+        /* Notification Styles */
+        .notification-container {
             position: relative;
             margin-right: 20px;
+        }
+
+        .notification-badge {
             font-size: 1.2rem;
             color: var(--gray-text);
             cursor: pointer;
+            position: relative;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .notification-badge:hover {
+            background-color: var(--light-green);
+            color: var(--primary-green);
         }
 
         .badge-count {
@@ -169,12 +289,157 @@
             background-color: var(--accent-orange);
             color: white;
             border-radius: 50%;
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             font-size: 0.7rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        .badge-count.new {
+            animation: bounce 0.5s ease-in-out;
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 350px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+            margin-top: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1060;
+            display: none;
+        }
+
+        .notification-dropdown.active {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .notification-clear {
+            background: none;
+            border: none;
+            color: var(--primary-green);
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .notification-clear:hover {
+            text-decoration: underline;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .notification-item:hover {
+            background-color: var(--light-green);
+        }
+
+        .notification-item.unread {
+            background-color: #f0f9ff;
+            border-left: 3px solid var(--primary-green);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .notification-details {
+            flex: 1;
+        }
+
+        .notification-message {
+            font-weight: 500;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: var(--gray-text);
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .notification-action {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: var(--light-bg);
+            color: var(--gray-text);
+            cursor: pointer;
+        }
+
+        .notification-action.view {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .notification-footer {
+            padding: 12px 20px;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .notification-view-all {
+            color: var(--primary-green);
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .notification-view-all:hover {
+            text-decoration: underline;
+        }
+
+        .no-notifications {
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--gray-text);
         }
 
         /* Stats Cards */
@@ -227,6 +492,33 @@
 
         .trend-down {
             color: #ff3b30;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 60%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-5px); }
+            80% { transform: translateY(-2px); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification-item.new {
+            animation: slideIn 0.3s ease-out;
         }
 
         /* Charts Section */
@@ -426,6 +718,11 @@
                 width: 300px;
             }
 
+            .notification-dropdown {
+                width: 300px;
+                right: -50px;
+            }
+
             .charts-row {
                 grid-template-columns: 1fr;
             }
@@ -452,8 +749,23 @@
                 width: 200px;
             }
 
+            .notification-dropdown {
+                position: fixed;
+                left: 20px;
+                right: 20px;
+                top: 120px;
+                width: auto;
+            }
+
             .stats-container {
                 grid-template-columns: 1fr;
+            }
+
+            .search-results {
+                position: fixed;
+                left: 20px;
+                right: 20px;
+                top: 120px;
             }
         }
 
@@ -470,6 +782,11 @@
             .user-info {
                 width: 100%;
                 justify-content: space-between;
+            }
+
+            .notification-dropdown {
+                left: 10px;
+                right: 10px;
             }
         }
     </style>
@@ -532,14 +849,14 @@
 
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" id="globalSearch" placeholder="Search orders, products, customers...">
+                <input type="text" id="globalSearch" placeholder="Search order #">
+                <div class="search-results" id="searchResults">
+                    <!-- Search results will be populated here -->
+                </div>
             </div>
 
             <div class="user-info">
-                <div class="notification-badge" id="notificationBtn">
-                    <i class="far fa-bell"></i>
-                    <span class="badge-count">5</span>
-                </div>
+
 
                 <div class="user-avatar">{{ substr(auth()->user()->name, 0, 2) }}</div>
                 <div class="user-details">
@@ -587,19 +904,487 @@
             document.querySelector('.sidebar').classList.toggle('active');
         });
 
-        // Global search functionality
-        document.getElementById('globalSearch')?.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            if (searchTerm.length > 2) {
-                // In a real application, this would make an API call
-                console.log('Searching for:', searchTerm);
+        // Notification system
+        class NotificationSystem {
+            constructor() {
+                this.notifications = JSON.parse(localStorage.getItem('adminNotifications')) || [];
+                this.unreadCount = this.notifications.filter(n => !n.read).length;
+                this.updateNotificationUI();
+                this.startPolling();
+            }
+
+            // Poll for new orders every 30 seconds
+            startPolling() {
+                setInterval(() => this.checkNewOrders(), 30000);
+                // Initial check
+                this.checkNewOrders();
+            }
+
+            // Check for new orders via API
+            async checkNewOrders() {
+                try {
+                    const response = await fetch('/admin/orders/recent', {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+
+                    if (response.ok) {
+                        const orders = await response.json();
+                        this.processNewOrders(orders);
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch recent orders:', error);
+                }
+            }
+
+            // Process new orders and create notifications
+            processNewOrders(orders) {
+                let newNotifications = false;
+
+                orders.forEach(order => {
+                    // Check if we already have a notification for this order
+                    const existingNotification = this.notifications.find(n => n.id === `order_${order.id}`);
+
+                    if (!existingNotification) {
+                        const notification = {
+                            id: `order_${order.id}`,
+                            type: 'new_order',
+                            title: 'New Order Received',
+                            message: `Order #${order.order_number} from ${order.customer_name}`,
+                            amount: order.total ? `₱${parseFloat(order.total).toLocaleString()}` : '₱0.00',
+                            time: new Date().toISOString(),
+                            read: false,
+                            orderId: order.id,
+                            url: `/admin/orders/${order.id}`
+                        };
+
+                        this.notifications.unshift(notification);
+                        newNotifications = true;
+
+                        // Show desktop notification if supported
+                        this.showDesktopNotification(notification);
+                    }
+                });
+
+                if (newNotifications) {
+                    this.saveNotifications();
+                    this.updateNotificationUI();
+                    this.animateNewNotification();
+                }
+            }
+
+            // Show desktop notification
+            showDesktopNotification(notification) {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('New Order - Balayan Smashers Hub', {
+                        body: notification.message,
+                        icon: '/favicon.ico',
+                        tag: notification.id
+                    });
+                }
+            }
+
+            // Request notification permission
+            requestNotificationPermission() {
+                if ('Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission();
+                }
+            }
+
+            // Update notification UI
+            updateNotificationUI() {
+                const notificationList = document.getElementById('notificationList');
+                const notificationCount = document.getElementById('notificationCount');
+
+                this.unreadCount = this.notifications.filter(n => !n.read).length;
+
+                // Update badge count
+                notificationCount.textContent = this.unreadCount;
+                if (this.unreadCount > 0) {
+                    notificationCount.classList.add('new');
+                } else {
+                    notificationCount.classList.remove('new');
+                }
+
+                // Update notification list
+                if (this.notifications.length === 0) {
+                    notificationList.innerHTML = `
+                        <div class="no-notifications">
+                            <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                            <p>No notifications</p>
+                            <small class="text-muted">New orders will appear here</small>
+                        </div>
+                    `;
+                } else {
+                    let html = '';
+                    this.notifications.forEach(notification => {
+                        const timeAgo = this.getTimeAgo(notification.time);
+                        const isUnread = !notification.read ? 'unread' : '';
+
+                        html += `
+                            <div class="notification-item ${isUnread}" data-id="${notification.id}">
+                                <div class="notification-content">
+                                    <div class="notification-icon" style="background: #00b14f;">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </div>
+                                    <div class="notification-details">
+                                        <div class="notification-message">${notification.message}</div>
+                                        <div class="notification-time">${timeAgo} • ${notification.amount}</div>
+                                        <div class="notification-actions">
+                                            <span class="notification-action view" onclick="notificationSystem.viewOrder('${notification.orderId}')">View Order</span>
+                                            <span class="notification-action" onclick="notificationSystem.markAsRead('${notification.id}')">Mark Read</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    notificationList.innerHTML = html;
+                }
+            }
+
+            // Animate new notification
+            animateNewNotification() {
+                const badge = document.getElementById('notificationCount');
+                badge.classList.add('new');
+                setTimeout(() => badge.classList.remove('new'), 2000);
+            }
+
+            // Mark notification as read
+            markAsRead(notificationId) {
+                const notification = this.notifications.find(n => n.id === notificationId);
+                if (notification) {
+                    notification.read = true;
+                    this.saveNotifications();
+                    this.updateNotificationUI();
+                }
+            }
+
+            // Mark all as read
+            markAllAsRead() {
+                this.notifications.forEach(notification => {
+                    notification.read = true;
+                });
+                this.saveNotifications();
+                this.updateNotificationUI();
+            }
+
+            // Clear all notifications
+            clearAll() {
+                this.notifications = [];
+                this.saveNotifications();
+                this.updateNotificationUI();
+            }
+
+            // View order
+            viewOrder(orderId) {
+                window.location.href = `/admin/orders/${orderId}`;
+            }
+
+            // Get time ago string
+            getTimeAgo(timestamp) {
+                const now = new Date();
+                const time = new Date(timestamp);
+                const diffInSeconds = Math.floor((now - time) / 1000);
+
+                if (diffInSeconds < 60) return 'Just now';
+                if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+                if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+                return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            }
+
+            // Save notifications to localStorage
+            saveNotifications() {
+                // Keep only last 50 notifications
+                if (this.notifications.length > 50) {
+                    this.notifications = this.notifications.slice(0, 50);
+                }
+                localStorage.setItem('adminNotifications', JSON.stringify(this.notifications));
+            }
+        }
+
+        // Initialize notification system
+        const notificationSystem = new NotificationSystem();
+
+        // Notification dropdown toggle
+        document.getElementById('notificationBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('active');
+
+            // Mark all as read when opening dropdown
+            if (dropdown.classList.contains('active')) {
+                notificationSystem.markAllAsRead();
             }
         });
 
-        // Notification bell click
-        document.getElementById('notificationBtn')?.addEventListener('click', function() {
-            alert('You have 5 new notifications');
-            // In a real app, this would show a dropdown with notifications
+        // Clear all notifications
+        document.getElementById('clearNotifications').addEventListener('click', function(e) {
+            e.stopPropagation();
+            notificationSystem.clearAll();
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function() {
+            document.getElementById('notificationDropdown').classList.remove('active');
+        });
+
+        // Prevent dropdown close when clicking inside
+        document.getElementById('notificationDropdown').addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Request notification permission on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            notificationSystem.requestNotificationPermission();
+        });
+
+        // [REST OF YOUR EXISTING JAVASCRIPT CODE FOR SEARCH...]
+        // Global search functionality
+        let searchTimeout;
+        const searchInput = document.getElementById('globalSearch');
+        const searchResults = document.getElementById('searchResults');
+
+        // CSRF token for API requests
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+        // Updated search function with real API calls
+        async function performSearch(searchTerm) {
+            if (searchTerm.length < 2) {
+                searchResults.classList.remove('active');
+                return;
+            }
+
+            try {
+                // Show loading state
+                searchResults.innerHTML = `
+                    <div class="no-results">
+                        <div class="loading-spinner" style="width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #00b14f; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 10px;"></div>
+                        <p>Searching...</p>
+                    </div>
+                `;
+                searchResults.classList.add('active');
+
+                const response = await fetch(`/admin/search?q=${encodeURIComponent(searchTerm)}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Search failed: ${response.status}`);
+                }
+
+                const results = await response.json();
+                displaySearchResults(results, searchTerm);
+
+            } catch (error) {
+                console.error('Search error:', error);
+                // Show error message
+                searchResults.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2 text-warning"></i>
+                        <p>Search temporarily unavailable</p>
+                        <small class="text-muted">Please try again later</small>
+                    </div>
+                `;
+                searchResults.classList.add('active');
+            }
+        }
+
+        // Display search results from API
+        function displaySearchResults(results, searchTerm) {
+            const totalResults = (results.products?.length || 0) +
+                               (results.orders?.length || 0) +
+                               (results.customers?.length || 0) +
+                               (results.categories?.length || 0);
+
+            if (totalResults === 0) {
+                searchResults.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search fa-2x mb-2"></i>
+                        <p>No results found for "${searchTerm}"</p>
+                        <small class="text-muted">Try searching with different keywords</small>
+                    </div>
+                `;
+            } else {
+                let html = '';
+
+                // Products section
+                if (results.products && results.products.length > 0) {
+                    html += `<div class="search-section">Products (${results.products.length})</div>`;
+                    results.products.forEach(product => {
+                        html += `
+                            <div class="search-result-item" onclick="navigateTo('${product.url}')">
+                                <div class="result-icon" style="background: #00b14f;">
+                                    <i class="fas fa-shopping-bag"></i>
+                                </div>
+                                <div class="result-info">
+                                    <div class="result-title">${highlightMatch(product.name, searchTerm)}</div>
+                                    <div class="result-meta">${product.sku} • ${product.price} • ${product.category}</div>
+                                </div>
+                                <div class="result-type">Product</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Orders section
+                if (results.orders && results.orders.length > 0) {
+                    html += `<div class="search-section">Orders (${results.orders.length})</div>`;
+                    results.orders.forEach(order => {
+                        const statusClass = getStatusClass(order.status);
+                        html += `
+                            <div class="search-result-item" onclick="navigateTo('${order.url}')">
+                                <div class="result-icon" style="background: #ff6b00;">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="result-info">
+                                    <div class="result-title">${highlightMatch(order.number, searchTerm)}</div>
+                                    <div class="result-meta">${order.customer} • ${order.amount} • <span class="status-badge ${statusClass}">${order.status}</span></div>
+                                </div>
+                                <div class="result-type">Order</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Customers section
+                if (results.customers && results.customers.length > 0) {
+                    html += `<div class="search-section">Customers (${results.customers.length})</div>`;
+                    results.customers.forEach(customer => {
+                        html += `
+                            <div class="search-result-item" onclick="navigateTo('${customer.url}')">
+                                <div class="result-icon" style="background: #3498db;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="result-info">
+                                    <div class="result-title">${highlightMatch(customer.name, searchTerm)}</div>
+                                    <div class="result-meta">${customer.email} • ${customer.orders} orders</div>
+                                </div>
+                                <div class="result-type">Customer</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Categories section
+                if (results.categories && results.categories.length > 0) {
+                    html += `<div class="search-section">Categories (${results.categories.length})</div>`;
+                    results.categories.forEach(category => {
+                        html += `
+                            <div class="search-result-item" onclick="navigateTo('${category.url}')">
+                                <div class="result-icon" style="background: #9b59b6;">
+                                    <i class="fas fa-tags"></i>
+                                </div>
+                                <div class="result-info">
+                                    <div class="result-title">${highlightMatch(category.name, searchTerm)}</div>
+                                    <div class="result-meta">${category.products} products</div>
+                                </div>
+                                <div class="result-type">Category</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // View all results
+                html += `
+                    <div class="view-all-results" onclick="viewAllResults('${searchTerm}')">
+                        View all ${totalResults} results for "${searchTerm}"
+                    </div>
+                `;
+
+                searchResults.innerHTML = html;
+            }
+
+            searchResults.classList.add('active');
+        }
+
+        // Get CSS class for order status
+        function getStatusClass(status) {
+            const statusClasses = {
+                'pending': 'status-pending',
+                'processing': 'status-processing',
+                'shipped': 'status-completed',
+                'delivered': 'status-completed',
+                'cancelled': 'status-cancelled'
+            };
+            return statusClasses[status] || 'status-pending';
+        }
+
+        // Highlight matching text
+        function highlightMatch(text, searchTerm) {
+            if (!searchTerm || !text) return text;
+            const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        // Escape special characters for regex
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Generic navigation function
+        function navigateTo(url) {
+            if (url && url !== '#') {
+                window.location.href = url;
+            } else {
+                console.warn('No URL provided for navigation');
+            }
+            searchResults.classList.remove('active');
+            searchInput.value = '';
+        }
+
+        function viewAllResults(searchTerm) {
+            alert(`Showing all results for: ${searchTerm}`);
+            searchResults.classList.remove('active');
+            searchInput.value = '';
+        }
+
+        // Event listeners for search
+        searchInput?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.trim();
+
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+
+            // Hide results if empty
+            if (searchTerm.length === 0) {
+                searchResults.classList.remove('active');
+                return;
+            }
+
+            // Set new timeout for search
+            searchTimeout = setTimeout(() => {
+                performSearch(searchTerm.toLowerCase());
+            }, 300);
+        });
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.search-bar')) {
+                searchResults.classList.remove('active');
+            }
+        });
+
+        // Handle keyboard navigation for search
+        searchInput?.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                searchResults.classList.remove('active');
+                searchInput.blur();
+            }
+
+            if (e.key === 'Enter') {
+                const firstResult = searchResults.querySelector('.search-result-item');
+                if (firstResult) {
+                    firstResult.click();
+                }
+            }
         });
 
         // Auto-hide alerts after 5 seconds
@@ -611,6 +1396,16 @@
                     bsAlert.close();
                 }, 5000);
             });
+
+            // Add CSS for loading spinner
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
         });
 
         // Close sidebar when clicking outside on mobile
@@ -623,6 +1418,13 @@
                 !sidebar.contains(event.target) &&
                 !toggleBtn.contains(event.target)) {
                 sidebar.classList.remove('active');
+            }
+        });
+
+        // Prevent form submission when pressing enter in search
+        searchInput?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
             }
         });
     </script>

@@ -1,6 +1,5 @@
 <?php
 
-// app/Http/Controllers/Admin/OrderController.php
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -33,7 +32,7 @@ class OrderController extends Controller
             $query->where('status', $request->status);
         }
 
-        $orders = $query->latest()->paginate(15);
+        $orders = $query->latest()->paginate(100);
 
         return view('admin.orders.index', compact('orders'));
     }
@@ -47,6 +46,36 @@ class OrderController extends Controller
             ->findOrFail($id);
 
         return view('admin.orders.show', compact('order'));
+    }
+
+    /**
+     * Get recent orders for notifications (AJAX)
+     */
+    public function getRecentOrders()
+    {
+        try {
+            $recentOrders = Order::with('user')
+                ->where('created_at', '>=', now()->subHours(24)) // Last 24 hours
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function($order) {
+                    return [
+                        'id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'customer_name' => $order->user->name,
+                        'total' => $order->total,
+                        'status' => $order->status,
+                        'created_at' => $order->created_at->toISOString()
+                    ];
+                });
+
+            return response()->json($recentOrders);
+        } catch (\Exception $e) {
+            Log::error('Error fetching recent orders: ' . $e->getMessage());
+
+            return response()->json([], 500);
+        }
     }
 
     /**
@@ -393,39 +422,3 @@ class OrderController extends Controller
         return back()->with('success', count($orders) . ' orders updated successfully!');
     }
 }
-
-// ============================================
-// ADD THESE ROUTES TO routes/web.php
-// ============================================
-/*
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // ... existing admin routes ...
-
-    // Order Management
-    Route::prefix('orders')->name('orders.')->group(function () {
-        Route::get('/', [AdminOrderController::class, 'index'])->name('index');
-        Route::get('/{id}', [AdminOrderController::class, 'show'])->name('show');
-        Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('status');
-        Route::patch('/{id}/payment', [AdminOrderController::class, 'updatePaymentStatus'])->name('payment');
-
-        // New routes for email and SMS
-        Route::post('/{id}/send-email', [AdminOrderController::class, 'sendEmail'])->name('send-email');
-        Route::post('/{id}/send-sms', [AdminOrderController::class, 'sendSms'])->name('send-sms');
-
-        // Additional features
-        Route::get('/export', [AdminOrderController::class, 'export'])->name('export');
-        Route::post('/bulk-update', [AdminOrderController::class, 'bulkUpdateStatus'])->name('bulk-update');
-        Route::delete('/{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
-    });
-});
-*/
-
-// ============================================
-// UPDATE ORDERS TABLE MIGRATION (if needed)
-// Add tracking_number column
-// ============================================
-/*
-Schema::table('orders', function (Blueprint $table) {
-    $table->string('tracking_number')->nullable()->after('order_number');
-});
-*/

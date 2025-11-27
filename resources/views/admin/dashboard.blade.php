@@ -10,7 +10,7 @@
         <div class="card stat-card shadow-sm">
             <div class="d-flex align-items-center">
                 <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
-                    <i class="bi bi-bag-check"></i>
+                    <i class="fas fa-shopping-cart"></i>
                 </div>
                 <div>
                     <h6 class="text-muted mb-1">Total Orders</h6>
@@ -24,8 +24,7 @@
         <div class="card stat-card shadow-sm">
             <div class="d-flex align-items-center">
                 <div class="stat-icon bg-success bg-opacity-10 text-success me-3">
-                    <span class="fw-bold">₱</span>
-
+                    <i class="fas fa-money-bill-wave"></i>
                 </div>
                 <div>
                     <h6 class="text-muted mb-1">Total Revenue</h6>
@@ -39,7 +38,7 @@
         <div class="card stat-card shadow-sm">
             <div class="d-flex align-items-center">
                 <div class="stat-icon bg-info bg-opacity-10 text-info me-3">
-                    <i class="bi bi-box-seam"></i>
+                    <i class="fas fa-box"></i>
                 </div>
                 <div>
                     <h6 class="text-muted mb-1">Total Products</h6>
@@ -53,7 +52,7 @@
         <div class="card stat-card shadow-sm">
             <div class="d-flex align-items-center">
                 <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
-                    <i class="bi bi-people"></i>
+                    <i class="fas fa-users"></i>
                 </div>
                 <div>
                     <h6 class="text-muted mb-1">Total Customers</h6>
@@ -74,7 +73,7 @@
                         <h6 class="text-muted">Pending Orders</h6>
                         <h2 class="text-danger mb-0">{{ $pendingOrders }}</h2>
                     </div>
-                    <i class="bi bi-clock-history text-danger" style="font-size: 2rem;"></i>
+                    <i class="fas fa-clock text-danger" style="font-size: 2rem;"></i>
                 </div>
             </div>
         </div>
@@ -88,7 +87,7 @@
                         <h6 class="text-muted">This Month Revenue</h6>
                         <h2 class="text-success mb-0">₱{{ number_format($monthlyRevenue, 2) }}</h2>
                     </div>
-                    <i class="bi bi-graph-up-arrow text-success" style="font-size: 2rem;"></i>
+                    <i class="fas fa-chart-line text-success" style="font-size: 2rem;"></i>
                 </div>
             </div>
         </div>
@@ -100,7 +99,7 @@
     <div class="col-lg-7">
         <div class="card shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-bag-check"></i> Recent Orders</h5>
+                <h5 class="mb-0"><i class="fas fa-shopping-cart"></i> Recent Orders</h5>
                 <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-primary">View All</a>
             </div>
             <div class="card-body p-0">
@@ -148,7 +147,7 @@
     <div class="col-lg-5">
         <div class="card shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Low Stock Alert</h5>
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Low Stock Alert</h5>
                 <a href="{{ route('admin.products.index') }}" class="btn btn-sm btn-warning">Manage</a>
             </div>
             <div class="card-body p-0">
@@ -165,7 +164,7 @@
                     </div>
                     @empty
                     <div class="list-group-item text-center py-4 text-muted">
-                        <i class="bi bi-check-circle text-success fs-3 d-block mb-2"></i>
+                        <i class="fas fa-check-circle text-success fs-3 d-block mb-2"></i>
                         All products are well stocked!
                     </div>
                     @endforelse

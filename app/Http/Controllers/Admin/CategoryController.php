@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -14,7 +16,7 @@ class CategoryController extends Controller
     {
         $categories = Category::withCount('products')
             ->orderBy('order')
-            ->paginate(15);
+            ->paginate(100);
 
         return view('admin.categories.index', compact('categories'));
     }
@@ -93,17 +95,29 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
 
-        if ($category->products()->count() > 0) {
-            return back()->with('error', 'Cannot delete category with products!');
+        // Delete all products and their images associated with this category
+        $products = Product::where('category_id', $category->id)->get();
+
+        foreach ($products as $product) {
+            // Delete product images
+            foreach ($product->images as $image) {
+                Storage::disk('public')->delete($image->image_path);
+                $image->delete();
+            }
+
+            // Delete the product
+            $product->delete();
         }
 
+        // Delete category image
         if ($category->image) {
             Storage::disk('public')->delete($category->image);
         }
 
+        // Delete the category
         $category->delete();
 
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Category deleted successfully!');
+            ->with('success', 'Category and all associated products deleted successfully!');
     }
 }

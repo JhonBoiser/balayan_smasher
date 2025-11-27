@@ -1,3 +1,7 @@
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 @extends('layouts.app')
 
 @section('title', $product->name . ' - Balayan Smashers Hub')
@@ -63,6 +67,7 @@
         width: 100%;
         height: 100%;
         object-fit: contain;
+        transition: transform 0.3s ease;
     }
 
     .image-thumbnails {
@@ -84,6 +89,11 @@
 
     .thumbnail.active {
         border-color: var(--primary-green);
+    }
+
+    .thumbnail:hover {
+        border-color: var(--primary-green);
+        transform: scale(1.05);
     }
 
     .thumbnail img {
@@ -624,16 +634,16 @@
         <div class="product-detail-layout">
             <!-- Product Images -->
             <div class="product-images">
-                @if($product->images->count() > 0)
+                @if($product->hasImages())
                     <div class="main-image" id="mainImage">
-                        <img src="{{ asset('storage/' . $product->images->first()->image_path) }}" alt="{{ $product->name }}" id="currentImage">
+                        <img src="{{ $product->getDisplayImageUrl() }}" alt="{{ $product->name }}" id="currentImage" onerror="this.src='https://via.placeholder.com/500x500?text=No+Image'">
                     </div>
 
                     <!-- Thumbnails -->
                     <div class="image-thumbnails">
                         @foreach($product->images as $index => $image)
-                        <div class="thumbnail {{ $index === 0 ? 'active' : '' }}" onclick="changeImage('{{ asset('storage/' . $image->image_path) }}', this)">
-                            <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $product->name }}">
+                        <div class="thumbnail {{ $index === 0 ? 'active' : '' }}" onclick="changeImage('{{ $product->getImageUrl($image->image_path) }}', this)">
+                            <img src="{{ $product->getImageUrl($image->image_path) }}" alt="{{ $product->name }}" onerror="this.src='https://via.placeholder.com/100x100?text=No+Image'">
                         </div>
                         @endforeach
                     </div>
@@ -808,11 +818,7 @@
                         @if($related->isOnSale())
                             <span class="product-badge sale">SALE</span>
                         @endif
-                        @if($related->primaryImage)
-                            <img src="{{ asset('storage/' . $related->primaryImage->image_path) }}" alt="{{ $related->name }}">
-                        @else
-                            <img src="https://via.placeholder.com/300x300?text=No+Image" alt="{{ $related->name }}">
-                        @endif
+                        <img src="{{ $related->getDisplayImageUrl() }}" alt="{{ $related->name }}" onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
                     </div>
                     <div class="related-product-info">
                         <div class="related-product-category">{{ $related->category->name }}</div>
@@ -883,5 +889,15 @@ function openTab(tabName) {
     // Add active class to the clicked tab link
     event.currentTarget.classList.add('active');
 }
+
+// Add image loading error handling
+document.addEventListener('DOMContentLoaded', function() {
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        img.addEventListener('error', function() {
+            this.src = 'https://via.placeholder.com/300x300?text=No+Image';
+        });
+    });
+});
 </script>
 @endsection

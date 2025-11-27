@@ -1,3 +1,7 @@
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 @extends('layouts.app')
 
 @section('content')
@@ -161,7 +165,7 @@
         font-size: 16px;
     }
 
-    /* Price Range */
+    /* Price Range - Fixed Responsive Styles */
     .price-inputs {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -175,11 +179,25 @@
         border-radius: 8px;
         font-size: 0.85rem;
         text-align: center;
+        width: 100%;
+        min-width: 0; /* Prevents overflow on small screens */
+        box-sizing: border-box; /* Ensures padding doesn't break layout */
     }
 
     .price-input:focus {
         outline: none;
         border-color: #6ba932;
+    }
+
+    /* Hide number input spinners for better mobile experience */
+    .price-input::-webkit-outer-spin-button,
+    .price-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .price-input[type=number] {
+        -moz-appearance: textfield;
     }
 
     .apply-filter-btn {
@@ -481,7 +499,7 @@
         justify-content: center;
     }
 
-    /* Responsive */
+    /* Responsive Design */
     @media (max-width: 992px) {
         .shop-layout {
             grid-template-columns: 1fr;
@@ -560,6 +578,37 @@
             grid-template-columns: 1fr;
             gap: 16px;
         }
+
+        /* Mobile-specific price range improvements */
+        .price-inputs {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .price-input {
+            font-size: 16px; /* Prevents zoom on iOS */
+            padding: 12px 10px; /* Larger touch targets */
+        }
+
+        .apply-filter-btn {
+            padding: 12px;
+            font-size: 1rem;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .shop-container {
+            padding: 0 16px;
+        }
+
+        .shop-main {
+            padding: 16px;
+        }
+
+        .price-input {
+            padding: 10px 8px;
+            font-size: 14px;
+        }
     }
 </style>
 
@@ -622,8 +671,8 @@
                         Price Range
                     </h3>
                     <div class="price-inputs">
-                        <input type="number" class="price-input" placeholder="Min" min="0" id="minPrice">
-                        <input type="number" class="price-input" placeholder="Max" min="0" id="maxPrice">
+                        <input type="number" class="price-input" placeholder="Min ₱" min="0" id="minPrice">
+                        <input type="number" class="price-input" placeholder="Max ₱" min="0" id="maxPrice">
                     </div>
                     <button class="apply-filter-btn" id="applyPriceFilter">Apply Filter</button>
                 </div>
@@ -664,12 +713,10 @@
                                 {{ $product->isInStock() ? ($product->isLowStock() ? 'Low Stock' : 'In Stock') : 'Out of Stock' }}
                             </span>
 
-                            <!-- Product Image -->
-                            @if($product->primaryImage)
-                                <img src="{{ asset('storage/' . $product->primaryImage->image_path) }}" alt="{{ $product->name }}">
-                            @else
-                                <img src="https://via.placeholder.com/300x300?text=No+Image" alt="{{ $product->name }}">
-                            @endif
+                            <!-- Fixed Product Image -->
+                            <img src="{{ $product->getDisplayImageUrl() }}" 
+                                 alt="{{ $product->name }}" 
+                                 onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
                         </div>
 
                         <div class="product-info">
@@ -775,6 +822,62 @@ document.addEventListener('click', function(event) {
         !sidebar.contains(event.target) && !filterToggle.contains(event.target)) {
         toggleFilters();
     }
+});
+
+// Enhanced price input validation
+document.addEventListener('DOMContentLoaded', function() {
+    const minPriceInput = document.getElementById('minPrice');
+    const maxPriceInput = document.getElementById('maxPrice');
+
+    // Validate price inputs
+    [minPriceInput, maxPriceInput].forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value && parseFloat(this.value) < 0) {
+                this.value = 0;
+            }
+        });
+
+        // Prevent negative numbers
+        input.addEventListener('keydown', function(e) {
+            if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                e.preventDefault();
+            }
+        });
+    });
+
+    // Add image error handling for all product images
+    const productImages = document.querySelectorAll('.product-image img');
+    productImages.forEach(img => {
+        img.addEventListener('error', function() {
+            this.src = 'https://via.placeholder.com/300x300?text=No+Image';
+            this.style.objectFit = 'contain';
+            this.parentElement.style.background = '#f8f9fa';
+        });
+    });
+});
+
+// Enhanced image loading with lazy loading
+document.addEventListener('DOMContentLoaded', function() {
+    // Add lazy loading to all product images
+    const productImages = document.querySelectorAll('.product-image img');
+    
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.getAttribute('data-src') || img.src;
+                imageObserver.unobserve(img);
+            }
+        });
+    });
+
+    productImages.forEach(img => {
+        // Store original src in data-src for lazy loading
+        if (!img.getAttribute('data-src')) {
+            img.setAttribute('data-src', img.src);
+        }
+        imageObserver.observe(img);
+    });
 });
 </script>
 @endsection

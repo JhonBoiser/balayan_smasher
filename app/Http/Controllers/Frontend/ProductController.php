@@ -42,7 +42,7 @@ class ProductController extends Controller
             $query->latest();
         }
 
-        $products = $query->paginate(12);
+        $products = $query->paginate(100);
         $categories = Category::where('is_active', true)->get();
 
         return view('frontend.products.index', compact('products', 'categories'));

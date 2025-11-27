@@ -104,7 +104,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-sm">
-                                            <i class="bi bi-trash"></i>
+                                            <i class="bi bi-trash">X</i>
                                         </button>
                                     </form>
                                 </div>

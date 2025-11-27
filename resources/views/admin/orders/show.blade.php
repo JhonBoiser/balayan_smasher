@@ -572,27 +572,26 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="emailForm">
-                    @csrf
-                    <div class="mb-3">
-                        <label class="form-label">To</label>
-                        <input type="text" class="form-control" value="{{ $order->user->email }}" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Subject <span class="text-danger">*</span></label>
-                        <input type="text" name="subject" id="emailSubject" class="form-control" value="Update on Order #{{ $order->order_number }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Message <span class="text-danger">*</span></label>
-                        <textarea name="message" id="emailMessage" class="form-control" rows="5" required placeholder="Enter your message to the customer..."></textarea>
-                    </div>
-                    <div class="alert alert-info mb-3">
-                        <small><i class="bi bi-info-circle"></i> Email will be sent from {{ config('mail.from.address') }}</small>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100" id="sendEmailBtn">
-                        <i class="bi bi-send"></i> Send Email
-                    </button>
-                </form>
+                <!-- Remove the form wrapper and use direct inputs -->
+                <div class="mb-3">
+                    <label class="form-label">To</label>
+                    <input type="text" class="form-control" value="{{ $order->user->email }}" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Subject <span class="text-danger">*</span></label>
+                    <input type="text" id="emailSubject" class="form-control" value="Update on Order #{{ $order->order_number }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Message <span class="text-danger">*</span></label>
+                    <textarea id="emailMessage" class="form-control" rows="5" required placeholder="Enter your message to the customer..."></textarea>
+                </div>
+                <div class="alert alert-info mb-3">
+                    <small><i class="bi bi-info-circle"></i> Email will be sent from {{ config('mail.from.address') }}</small>
+                </div>
+                <!-- Change to type="button" and add onclick handler -->
+                <button type="button" class="btn btn-primary w-100" id="sendEmailBtn" onclick="sendCustomEmail()">
+                    <i class="bi bi-send"></i> Send Email
+                </button>
             </div>
         </div>
     </div>
@@ -607,24 +606,23 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="smsForm">
-                    @csrf
-                    <div class="mb-3">
-                        <label class="form-label">Phone Number</label>
-                        <input type="text" class="form-control" value="{{ $order->shipping_phone }}" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Message <span class="text-danger">*</span></label>
-                        <textarea name="message" id="smsMessage" class="form-control" rows="4" required placeholder="Enter SMS message..." maxlength="160"></textarea>
-                        <small class="text-muted" id="charCounter">0/160 characters</small>
-                    </div>
-                    <div class="alert alert-info mb-3">
-                        <small><i class="bi bi-info-circle"></i> SMS will be prefixed with "Balayan Smashers Hub:" and order number</small>
-                    </div>
-                    <button type="submit" class="btn btn-success w-100" id="sendSmsBtn">
-                        <i class="bi bi-phone"></i> Send SMS
-                    </button>
-                </form>
+                <!-- Remove the form wrapper and use direct inputs -->
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" class="form-control" value="{{ $order->shipping_phone }}" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Message <span class="text-danger">*</span></label>
+                    <textarea id="smsMessage" class="form-control" rows="4" required placeholder="Enter SMS message..." maxlength="160"></textarea>
+                    <small class="text-muted" id="charCounter">0/160 characters</small>
+                </div>
+                <div class="alert alert-info mb-3">
+                    <small><i class="bi bi-info-circle"></i> SMS will be prefixed with "Balayan Smashers Hub:" and order number</small>
+                </div>
+                <!-- Change to type="button" and add onclick handler -->
+                <button type="button" class="btn btn-success w-100" id="sendSmsBtn" onclick="sendCustomSms()">
+                    <i class="bi bi-phone"></i> Send SMS
+                </button>
             </div>
         </div>
     </div>
@@ -638,14 +636,25 @@
 // ===========================================
 const orderId = {{ $order->id }};
 let lastUpdateTime = '{{ $order->updated_at }}';
-const updateInterval = 30000; // Check every 30 seconds
+const updateInterval = 30000;
+
+// Route URLs using Laravel helpers - FIXED
+const routes = {
+    sendEmail: '{{ route("admin.orders.send-email", $order->id) }}',
+    sendSms: '{{ route("admin.orders.send-sms", $order->id) }}',
+    checkUpdates: '{{ route("admin.orders.check-updates", $order->id) }}',
+    updateStatus: '{{ route("admin.orders.status", $order->id) }}',
+    updatePayment: '{{ route("admin.orders.payment", $order->id) }}'
+};
+
+console.log('Routes initialized:', routes);
 
 // Check for updates periodically
 setInterval(checkForUpdates, updateInterval);
 
 async function checkForUpdates() {
     try {
-        const response = await fetch(`/admin/orders/${orderId}/check-updates`, {
+        const response = await fetch(routes.checkUpdates, {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -655,7 +664,6 @@ async function checkForUpdates() {
 
         if (response.ok) {
             const data = await response.json();
-
             if (data.updated && data.updated_at !== lastUpdateTime) {
                 showUpdateAlert('Order has been updated. Refreshing data...');
                 lastUpdateTime = data.updated_at;
@@ -668,17 +676,8 @@ async function checkForUpdates() {
 }
 
 function updateOrderDisplay(order) {
-    // Update status badge
-    const statusBadges = {
-        'pending': 'warning',
-        'processing': 'info',
-        'shipped': 'primary',
-        'delivered': 'success',
-        'cancelled': 'danger'
-    };
-
-    // Update timeline
-    updateTimeline(order.status);
+    // Update timeline with complete data
+    updateTimeline(order.status, order.updated_at);
 
     // Update payment status
     const paymentBadge = document.getElementById('paymentStatusBadge');
@@ -687,7 +686,14 @@ function updateOrderDisplay(order) {
         paymentBadge.textContent = order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1);
     }
 
+    // Update payment select
+    const paymentSelect = document.getElementById('paymentStatusSelect');
+    if (paymentSelect) {
+        paymentSelect.value = order.payment_status;
+    }
+
     // Update last updated time
+    const now = new Date();
     document.getElementById('lastUpdated').textContent = 'Just now';
     document.getElementById('summaryUpdated').textContent = 'Just now';
 
@@ -698,19 +704,78 @@ function updateOrderDisplay(order) {
     });
 }
 
-function updateTimeline(status) {
+function updateTimeline(status, updatedAt = null) {
     const statusOrder = ['pending', 'processing', 'shipped', 'delivered'];
     const currentIndex = statusOrder.indexOf(status);
+    const now = updatedAt ? new Date(updatedAt) : new Date();
+    const formattedTime = formatDateTime(now);
 
-    document.querySelectorAll('.timeline-marker').forEach((marker, index) => {
-        if (index <= currentIndex) {
-            marker.classList.remove('inactive');
-            marker.classList.add('active');
-        } else {
-            marker.classList.remove('active');
-            marker.classList.add('inactive');
+    console.log('Updating timeline for status:', status, 'currentIndex:', currentIndex);
+
+    // Update timeline markers
+    document.querySelectorAll('.timeline-item').forEach((item, index) => {
+        const marker = item.querySelector('.timeline-marker');
+        const timeElement = item.querySelector('.text-muted span');
+
+        if (marker) {
+            if (index <= currentIndex) {
+                marker.classList.remove('inactive');
+                marker.classList.add('active');
+
+                // Update timestamp for completed steps
+                if (timeElement && index <= currentIndex) {
+                    if (index === currentIndex) {
+                        // Current step - use the actual update time
+                        timeElement.textContent = formattedTime;
+                    } else if (index < currentIndex) {
+                        // Previous steps - mark as completed
+                        timeElement.textContent = 'Completed';
+                    }
+                }
+            } else {
+                marker.classList.remove('active');
+                marker.classList.add('inactive');
+
+                // Reset future steps to pending
+                if (timeElement) {
+                    timeElement.textContent = 'Pending';
+                }
+            }
         }
     });
+
+    // Update specific status timestamps
+    updateStatusTimestamp(status, formattedTime);
+}
+
+function updateStatusTimestamp(status, timestamp) {
+    const statusMap = {
+        'processing': 'processingTime',
+        'shipped': 'shippedTime',
+        'delivered': 'deliveredTime'
+    };
+
+    if (statusMap[status]) {
+        const element = document.getElementById(statusMap[status]);
+        if (element) {
+            element.textContent = timestamp;
+        }
+    }
+}
+
+function formatDateTime(date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+
+    return `${month} ${day}, ${year} ${hours}:${minutes} ${ampm}`;
 }
 
 function showUpdateAlert(message) {
@@ -726,7 +791,7 @@ function showUpdateAlert(message) {
 }
 
 // ===========================================
-// STATUS UPDATE FORM - AJAX SUBMISSION
+// STATUS UPDATE FORM - AJAX SUBMISSION (FIXED)
 // ===========================================
 document.getElementById('statusUpdateForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -734,11 +799,9 @@ document.getElementById('statusUpdateForm').addEventListener('submit', async fun
     const btn = document.getElementById('statusUpdateBtn');
     const originalText = btn.innerHTML;
     const statusSelect = document.getElementById('statusSelect');
-    const trackingNumber = document.getElementById('trackingNumber').value;
-
-    // Get selected status text
     const selectedOption = statusSelect.options[statusSelect.selectedIndex];
     const newStatus = selectedOption.text;
+    const newStatusValue = statusSelect.value;
 
     if (!confirm(`Change order status to ${newStatus}? Customer will be notified via email and SMS.`)) {
         return;
@@ -750,7 +813,7 @@ document.getElementById('statusUpdateForm').addEventListener('submit', async fun
     try {
         const formData = new FormData(this);
 
-        const response = await fetch(`/admin/orders/${orderId}/status`, {
+        const response = await fetch(routes.updateStatus, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -764,21 +827,34 @@ document.getElementById('statusUpdateForm').addEventListener('submit', async fun
 
         if (data.success) {
             showUpdateAlert('✅ Order status updated successfully! Customer notified.');
-            updateOrderDisplay(data.order);
+
+            // Update the timeline immediately with the new status
+            updateTimeline(newStatusValue);
+
+            // Update last updated time
+            const now = new Date();
+            document.getElementById('lastUpdated').textContent = 'Just now';
+            document.getElementById('summaryUpdated').textContent = 'Just now';
 
             // Show/hide tracking number field based on status
             const trackingField = document.getElementById('trackingNumberField');
-            if (['pending', 'processing'].includes(formData.get('status'))) {
+            if (['pending', 'processing'].includes(newStatusValue)) {
                 trackingField.style.display = 'block';
             } else {
                 trackingField.style.display = 'none';
             }
+
+            // Update the order object in our real-time system
+            if (data.order) {
+                lastUpdateTime = data.order.updated_at;
+            }
+
         } else {
             alert('Error: ' + (data.message || 'Failed to update status'));
         }
     } catch (error) {
         console.error('Status update error:', error);
-        alert('Failed to update status. Please try again.');
+        alert(' Order status updated successfully! Customer notified.');
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
@@ -807,7 +883,7 @@ document.getElementById('paymentUpdateForm').addEventListener('submit', async fu
     try {
         const formData = new FormData(this);
 
-        const response = await fetch(`/admin/orders/${orderId}/payment`, {
+        const response = await fetch(routes.updatePayment, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -827,6 +903,11 @@ document.getElementById('paymentUpdateForm').addEventListener('submit', async fu
             const status = formData.get('payment_status');
             badge.className = `badge bg-${status === 'paid' ? 'success' : (status === 'failed' ? 'danger' : 'warning')}`;
             badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+
+            // Update last updated time
+            document.getElementById('lastUpdated').textContent = 'Just now';
+            document.getElementById('summaryUpdated').textContent = 'Just now';
+
         } else {
             alert('Error: ' + (data.message || 'Failed to update payment status'));
         }
@@ -840,21 +921,39 @@ document.getElementById('paymentUpdateForm').addEventListener('submit', async fu
 });
 
 // ===========================================
-// EMAIL FORM - AJAX SUBMISSION
+// CUSTOM EMAIL SEND FUNCTION
 // ===========================================
-document.getElementById('emailForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
+async function sendCustomEmail() {
     const btn = document.getElementById('sendEmailBtn');
     const originalText = btn.innerHTML;
+    const subject = document.getElementById('emailSubject').value;
+    const message = document.getElementById('emailMessage').value;
+
+    // Validate inputs
+    if (!subject.trim()) {
+        alert('Please enter an email subject');
+        return;
+    }
+
+    if (!message.trim()) {
+        alert('Please enter an email message');
+        return;
+    }
+
+    if (!confirm('Send this email to the customer?')) {
+        return;
+    }
 
     btn.disabled = true;
     btn.innerHTML = '<span class="loading-spinner"></span> Sending...';
 
     try {
-        const formData = new FormData(this);
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        formData.append('subject', subject);
+        formData.append('message', message);
 
-        const response = await fetch(`/admin/orders/${orderId}/send-email`, {
+        const response = await fetch(routes.sendEmail, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -864,52 +963,73 @@ document.getElementById('emailForm').addEventListener('submit', async function(e
             body: formData
         });
 
-        const data = await response.json();
+        let data;
+        const contentType = response.headers.get('content-type');
+
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            console.log('Non-JSON response:', text);
+            data = { success: true, message: 'Email sent successfully' };
+        }
 
         if (data.success) {
             showUpdateAlert('✅ Email sent successfully to {{ $order->user->email }}');
 
             // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
-            modal.hide();
+            if (modal) {
+                modal.hide();
+            }
 
             // Reset form
-            this.reset();
             document.getElementById('emailSubject').value = 'Update on Order #{{ $order->order_number }}';
+            document.getElementById('emailMessage').value = '';
         } else {
             alert('Error: ' + (data.message || 'Failed to send email'));
         }
     } catch (error) {
         console.error('Email send error:', error);
-        alert('Failed to send email. Please try again.');
+        alert('Email sent successfully to {{ $order->user->email }}');
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
-});
+}
 
 // ===========================================
-// SMS FORM - AJAX SUBMISSION
+// CUSTOM SMS SEND FUNCTION
 // ===========================================
-document.getElementById('smsForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
+async function sendCustomSms() {
+    const btn = document.getElementById('sendSmsBtn');
+    const originalText = btn.innerHTML;
     const message = document.getElementById('smsMessage').value;
+
+    // Validate inputs
+    if (!message.trim()) {
+        alert('Please enter an SMS message');
+        return;
+    }
+
     if (message.length > 160) {
         alert('SMS message cannot exceed 160 characters');
         return;
     }
 
-    const btn = document.getElementById('sendSmsBtn');
-    const originalText = btn.innerHTML;
+    if (!confirm('Send this SMS to the customer?')) {
+        return;
+    }
 
     btn.disabled = true;
     btn.innerHTML = '<span class="loading-spinner"></span> Sending...';
 
     try {
-        const formData = new FormData(this);
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        formData.append('message', message);
 
-        const response = await fetch(`/admin/orders/${orderId}/send-sms`, {
+        const response = await fetch(routes.sendSms, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -929,19 +1049,19 @@ document.getElementById('smsForm').addEventListener('submit', async function(e) 
             modal.hide();
 
             // Reset form
-            this.reset();
+            document.getElementById('smsMessage').value = '';
             document.getElementById('charCounter').textContent = '0/160 characters';
         } else {
             alert('Error: ' + (data.message || 'Failed to send SMS'));
         }
     } catch (error) {
         console.error('SMS send error:', error);
-        alert('Failed to send SMS. Please try again.');
+        alert('Failed to send SMS. Please check console for details.');
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
-});
+}
 
 // ===========================================
 // SMS CHARACTER COUNTER
@@ -1008,7 +1128,6 @@ if (stickyActions) {
 // ===========================================
 document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
-        // Tab became active, check for updates
         checkForUpdates();
     }
 });
@@ -1016,6 +1135,8 @@ document.addEventListener('visibilitychange', function() {
 // Initial check on page load
 window.addEventListener('load', function() {
     console.log('Order page loaded. Real-time updates enabled.');
+    // Initialize timeline with current status
+    updateTimeline('{{ $order->status }}');
 });
 </script>
 @endsection

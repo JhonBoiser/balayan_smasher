@@ -22,9 +22,11 @@ class OrderController extends Controller
 
     public function index()
     {
-        $orders = Order::with(['user', 'items.product'])
+        // ✅ FIXED: Only get orders for the authenticated customer
+        $orders = Order::where('user_id', auth()->id())
+            ->with(['user', 'items.product'])
             ->latest()
-            ->paginate(10);
+            ->paginate(100);
 
         return view('frontend.orders.index', compact('orders'));
     }
@@ -33,6 +35,11 @@ class OrderController extends Controller
     {
         $order = Order::with(['user', 'items.product.primaryImage'])
             ->findOrFail($id);
+
+        // ✅ FIXED: Ensure the order belongs to the authenticated customer
+        if ($order->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
 
         return view('frontend.orders.show', compact('order'));
     }
