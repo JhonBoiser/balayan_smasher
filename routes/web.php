@@ -17,11 +17,12 @@ use Illuminate\Support\Facades\Auth;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
-// Add this to your web.php routes file
+
+// Static Pages
 Route::get('/about', function () {
     return view('about');
 })->name('about');
-// Add this to your web.php routes file
+
 Route::get('/contact', function () {
     return view('contact');
 })->name('contact');
@@ -50,6 +51,11 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
         Route::get('/{id}', [OrderController::class, 'show'])->name('show');
+        // Customer actions on their orders
+        Route::patch('/{id}/status', [OrderController::class, 'updateStatus'])->name('status');
+        Route::patch('/{id}/payment', [OrderController::class, 'updatePaymentStatus'])->name('payment');
+        Route::post('/{id}/send-email', [OrderController::class, 'sendEmail'])->name('send-email');
+        Route::post('/{id}/send-sms', [OrderController::class, 'sendSms'])->name('send-sms');
     });
 });
 
@@ -57,15 +63,17 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Admin Search Routes
-    Route::prefix('search')->name('search.')->group(function () {
-        Route::get('/', [SearchController::class, 'globalSearch'])->name('global');
-        Route::get('/advanced', [SearchController::class, 'advancedSearch'])->name('advanced');
-    });
+    // Admin Search Routes - ADD THESE ROUTES
+    Route::get('/search', [SearchController::class, 'globalSearch'])->name('search');
+    Route::get('/search/advanced', [SearchController::class, 'advancedSearch'])->name('search.advanced');
+
+    // Recent orders for notifications - ADD THIS ROUTE
+    Route::get('/orders/recent', [SearchController::class, 'recentOrders'])->name('orders.recent');
 
     // Admin Products
     Route::resource('products', AdminProductController::class);
-    Route::delete('products/{id}/image/{imageId}', [AdminProductController::class, 'deleteImage'])->name('products.image.delete');
+    // Match controller signature: deleteImage($id) expects the image id only
+    Route::delete('products/image/{id}', [AdminProductController::class, 'deleteImage'])->name('products.image.delete');
 
     // Admin Categories
     Route::resource('categories', AdminCategoryController::class);
@@ -75,7 +83,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [AdminOrderController::class, 'index'])->name('index');
         Route::get('/{id}', [AdminOrderController::class, 'show'])->name('show');
         Route::get('/{id}/check-updates', [AdminOrderController::class, 'checkUpdates'])->name('check-updates');
-        Route::get('/recent', [AdminOrderController::class, 'getRecentOrders'])->name('recent'); // ADDED THIS LINE
+
+        // Remove this duplicate route since we added it above with SearchController
+        // Route::get('/recent', [AdminOrderController::class, 'getRecentOrders'])->name('recent');
+
+        Route::get('/export', [AdminOrderController::class, 'export'])->name('export');
+        Route::get('/bulk-update', function() {
+            $orders = \App\Models\Order::with('user')->latest()->paginate(50);
+            return view('admin.orders.bulk-update', compact('orders'));
+        })->name('bulk-update');
+        Route::post('/bulk-update-status', [AdminOrderController::class, 'bulkUpdateStatus'])->name('bulk-update-status');
+        Route::delete('/{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
         Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('status');
         Route::patch('/{id}/payment', [AdminOrderController::class, 'updatePaymentStatus'])->name('payment');
         Route::post('/{id}/send-email', [AdminOrderController::class, 'sendEmail'])->name('send-email');

@@ -714,8 +714,8 @@
                             </span>
 
                             <!-- Fixed Product Image -->
-                            <img src="{{ $product->getDisplayImageUrl() }}" 
-                                 alt="{{ $product->name }}" 
+                            <img src="{{ $product->getDisplayImageUrl() }}"
+                                 alt="{{ $product->name }}"
                                  onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
                         </div>
 
@@ -860,7 +860,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
     // Add lazy loading to all product images
     const productImages = document.querySelectorAll('.product-image img');
-    
+
     const imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {

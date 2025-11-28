@@ -1,5 +1,8 @@
 {{-- ========================================== --}}
-{{-- resources/views/admin/orders/show.blade.php --}}
+{{-- resources/
+
+
+s/admin/orders/show.blade.php --}}
 {{-- FULLY RESPONSIVE WITH REAL-TIME UPDATES --}}
 {{-- ========================================== --}}
 @extends('layouts.admin')

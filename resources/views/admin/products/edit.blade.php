@@ -97,7 +97,7 @@
                                     @if($image->is_primary)
                                         <span class="badge bg-primary position-absolute top-0 start-0 m-1">Primary</span>
                                     @endif
-                                    <form action="{{ route('admin.products.image.delete', [$product->id, $image->id]) }}"
+                                    <form action="{{ route('admin.products.image.delete', $image->id) }}"
                                           method="POST"
                                           class="position-absolute top-0 end-0 m-1"
                                           onsubmit="return confirm('Delete this image?');">
@@ -259,30 +259,33 @@
 
 @section('scripts')
 <script>
-    // Image preview for new uploads
-    document.getElementById('images').addEventListener('change', function(e) {
+    // Image preview for new uploads — safe guard if element missing
+    document.addEventListener('DOMContentLoaded', function() {
+        const imagesInput = document.getElementById('images');
         const preview = document.getElementById('image-preview');
-        preview.innerHTML = '';
 
-        const files = e.target.files;
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const reader = new FileReader();
+        if (!imagesInput || !preview) return;
 
-            reader.onload = function(e) {
-                const col = document.createElement('div');
-                col.className = 'col-3';
-                col.innerHTML = `
-                    <div class="position-relative">
-                        <img src="${e.target.result}" class="img-thumbnail" style="height: 100px; width: 100%; object-fit: cover;">
-                        <span class="badge bg-info position-absolute top-0 start-0 m-1">New</span>
-                    </div>
-                `;
-                preview.appendChild(col);
-            };
+        imagesInput.addEventListener('change', function(evt) {
+            preview.innerHTML = '';
 
-            reader.readAsDataURL(file);
-        }
+            const files = evt.target.files || [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (!file.type.startsWith('image/')) continue;
+
+                const reader = new FileReader();
+
+                reader.onload = function(loadEvent) {
+                    const col = document.createElement('div');
+                    col.className = 'col-3';
+                    col.innerHTML = '\n                        <div class="position-relative">\n                            <img src="' + loadEvent.target.result + '" class="img-thumbnail" style="height: 120px; width: 100%; object-fit: cover;">\n                            <span class="badge bg-info position-absolute top-0 start-0 m-1">New</span>\n                        </div>\n                    ';
+                    preview.appendChild(col);
+                };
+
+                reader.readAsDataURL(file);
+            }
+        });
     });
 </script>
 @endsection
