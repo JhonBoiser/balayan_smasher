@@ -66,7 +66,7 @@
 <!-- Additional Stats -->
 <div class="row g-4 mb-4">
     <div class="col-md-6">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -80,14 +80,29 @@
     </div>
 
     <div class="col-md-6">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-0">Revenue Overview</h6>
+                    <small class="text-muted">Filter by period</small>
+                </div>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Revenue filter" id="revenueFilter">
+                    <button type="button" class="btn btn-outline-secondary" data-range="week">Week</button>
+                    <button type="button" class="btn btn-outline-secondary active" data-range="month">Month</button>
+                    <button type="button" class="btn btn-outline-secondary" data-range="year">Year</button>
+                </div>
+            </div>
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h6 class="text-muted">This Month Revenue</h6>
-                        <h2 class="text-success mb-0">₱{{ number_format($monthlyRevenue, 2) }}</h2>
+                        <h6 class="text-muted mb-1">Selected Period Revenue</h6>
+                        <h3 class="mb-0 text-success" id="selectedRevenue">₱0.00</h3>
                     </div>
-                    <i class="fas fa-chart-line text-success" style="font-size: 2rem;"></i>
+                    <i class="fas fa-chart-bar text-success" style="font-size: 2rem;"></i>
+                </div>
+
+                <div class="chart-container" style="position: relative; height: 200px;">
+                    <canvas id="revenueChart"></canvas>
                 </div>
             </div>
         </div>
@@ -173,4 +188,155 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('revenueChart');
+    if (!ctx) return;
+
+    let revenueChart = null;
+
+    function formatCurrency(amount) {
+        return '₱' + Number(amount).toLocaleString('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function destroyChart() {
+        if (revenueChart) {
+            revenueChart.destroy();
+            revenueChart = null;
+        }
+    }
+
+    function createChart(labels, data) {
+        destroyChart();
+
+        // Generate dynamic colors for pie slices
+        function dynamicColor(index) {
+            const hue = (index * 47) % 360;
+            return `hsl(${hue}, 70%, 50%)`;
+        }
+
+        const colors = labels.map((_, i) => dynamicColor(i));
+
+        const chartData = {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                hoverOffset: 8
+            }]
+        };
+
+        const config = {
+            type: 'pie',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 10
+                    }
+                }
+            }
+        };
+
+        revenueChart = new Chart(ctx, config);
+    }
+
+    async function fetchRevenue(range = 'month') {
+        try {
+            const url = `{{ route('admin.dashboard.revenue-data') }}?range=${range}`;
+            const res = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const json = await res.json();
+
+            const labels = json.labels || [];
+            const data = json.data || [];
+
+            const total = data.reduce((a, b) => a + (Number(b) || 0), 0);
+            document.getElementById('selectedRevenue').textContent = formatCurrency(total);
+
+            createChart(labels, data);
+
+        } catch (err) {
+            console.error('Failed to fetch revenue data:', err);
+            document.getElementById('selectedRevenue').textContent = formatCurrency(0);
+
+            // Show error state in chart
+            createChart(['Error'], [1]);
+        }
+    }
+
+    // Wire up filter buttons
+    document.getElementById('revenueFilter')?.addEventListener('click', function(e) {
+        const btn = e.target.closest('button[data-range]');
+        if (!btn) return;
+
+        document.querySelectorAll('#revenueFilter button').forEach(b => {
+            b.classList.remove('active');
+        });
+
+        btn.classList.add('active');
+        const range = btn.dataset.range;
+        fetchRevenue(range);
+    });
+
+    // Initial load
+    const activeBtn = document.querySelector('#revenueFilter button.active');
+    const initialRange = activeBtn ? activeBtn.dataset.range : 'month';
+    fetchRevenue(initialRange);
+
+    // Handle window resize
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (revenueChart) {
+                revenueChart.resize();
+            }
+        }, 250);
+    });
+});
+</script>
 @endsection

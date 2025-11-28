@@ -20,23 +20,31 @@ class OrderController extends Controller
         $this->smsService = $smsService;
     }
 
+    /**
+     * Display a listing of the customer's orders
+     */
     public function index()
     {
-        // ✅ FIXED: Only get orders for the authenticated customer
         $orders = Order::where('user_id', auth()->id())
-            ->with(['user', 'items.product'])
+            ->with(['items.product.primaryImage'])
             ->latest()
-            ->paginate(100);
+            ->paginate(10);
 
         return view('frontend.orders.index', compact('orders'));
     }
 
+    /**
+     * Display the specified order
+     */
     public function show($id)
     {
-        $order = Order::with(['user', 'items.product.primaryImage'])
-            ->findOrFail($id);
+        $order = Order::with([
+            'user',
+            'items.product.primaryImage'
+        ])
+        ->where('user_id', auth()->id())
+        ->findOrFail($id);
 
-        // ✅ FIXED: Ensure the order belongs to the authenticated customer
         if ($order->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
@@ -44,116 +52,121 @@ class OrderController extends Controller
         return view('frontend.orders.show', compact('order'));
     }
 
-    public function updateStatus(Request $request, $id)
+    /**
+     * Cancel order (Customer action)
+     */
+    public function cancelOrder(Request $request, $id)
     {
-        $order = Order::findOrFail($id);
-        $oldStatus = $order->status;
-        $newStatus = $request->status;
+        $order = Order::where('user_id', auth()->id())->findOrFail($id);
 
-        $order->update([
-            'status' => $newStatus,
-            'tracking_number' => $request->tracking_number ?? $order->tracking_number
+        // Check if order can be cancelled
+        if (!$order->canBeCancelled()) {
+            return back()->with('error', 'This order cannot be cancelled. Only pending or processing orders with unpaid status can be cancelled.');
+        }
+
+        $request->validate([
+            'cancellation_reason' => 'required|in:changed_mind,found_cheaper,shipping_issues,product_unavailable,payment_issues,other',
+            'custom_reason' => 'required_if:cancellation_reason,other|max:500'
         ]);
 
-        // ✅ Send SMS notification based on new status
-        switch ($newStatus) {
-            case 'processing':
-                $this->smsService->sendOrderProcessing($order);
-                break;
-
-            case 'shipped':
-                $this->smsService->sendOrderShipped($order, $request->tracking_number ?? null);
-                break;
-
-            case 'delivered':
-                $this->smsService->sendOrderDelivered($order);
-                break;
-
-            case 'cancelled':
-                $this->smsService->sendOrderCancelled($order);
-                break;
+        $reason = $request->cancellation_reason;
+        if ($reason === 'other' && $request->custom_reason) {
+            $reason = $request->custom_reason;
         }
 
-        // ✅ Send email notification
-        Mail::to($order->user->email)
-            ->send(new OrderStatusUpdated($order, $oldStatus, $newStatus));
+        // Cancel the order
+        $order->cancel($reason, 'customer');
 
-        return back()->with('success', 'Order status updated! Customer notified via SMS and email.');
-    }
-
-    public function updatePaymentStatus(Request $request, $id)
-    {
-        $order = Order::findOrFail($id);
-        $order->update(['payment_status' => $request->payment_status]);
-
-        if ($request->payment_status === 'paid') {
-            // ✅ Notify customer via SMS and email
-            $this->smsService->sendPaymentReceived($order);
-            Mail::to($order->user->email)->send(new PaymentReceived($order));
-        }
-
-        return back()->with('success', 'Payment status updated and customer notified!');
-    }
-
-    // ✅ NEW METHOD: Send individual email notification
-    public function sendEmail(Request $request, $id)
-    {
-        $order = Order::findOrFail($id);
-
+        // Send notifications
         try {
-            // Send status update email
+            // Send SMS notification
+            $this->smsService->sendOrderCancelled($order);
+
+            // Send email notification to customer
             Mail::to($order->user->email)
-                ->send(new OrderStatusUpdated($order, $order->status, $order->status));
+                ->send(new OrderStatusUpdated($order, $order->status, 'cancelled'));
 
-            return back()->with('success', 'Email notification sent successfully to ' . $order->user->email . '!');
+            // Send email notification to admin (you might want to create a separate email for this)
+            // Mail::to(config('mail.admin_email'))
+            //     ->send(new OrderCancelledNotification($order));
+
         } catch (\Exception $e) {
-            Log::error('Email sending failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to send email: ' . $e->getMessage());
+            Log::error('Cancellation notification failed: ' . $e->getMessage());
         }
+
+        // Log the cancellation
+        Log::info('Order cancelled by customer', [
+            'order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'reason' => $reason
+        ]);
+
+        return redirect()->route('orders.show', $order->id)
+            ->with('success', 'Order has been cancelled successfully.');
     }
 
-    // ✅ NEW METHOD: Send individual SMS notification
-    public function sendSms(Request $request, $id)
+    /**
+     * Show cancellation form
+     */
+    public function showCancelForm($id)
     {
+        $order = Order::where('user_id', auth()->id())->findOrFail($id);
+
+        if (!$order->canBeCancelled()) {
+            return back()->with('error', 'This order cannot be cancelled.');
+        }
+
+        return view('frontend.orders.cancel', compact('order'));
+    }
+
+    /**
+     * Admin: Cancel order
+     */
+    public function adminCancelOrder(Request $request, $id)
+    {
+        // Check if user is admin
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $order = Order::findOrFail($id);
 
-        // Check if customer has phone number
-        if (empty($order->user->phone)) {
-            return back()->with('error', 'Cannot send SMS: Customer phone number not available.');
-        }
+        $request->validate([
+            'cancellation_reason' => 'required|string|max:500'
+        ]);
 
+        $order->cancel($request->cancellation_reason, 'admin');
+
+        // Send notifications
         try {
-            $customMessage = $request->custom_message;
-
-            if (!empty($customMessage)) {
-                // Send custom SMS message
-               // $this->smsService->sendCustomSms($order, $customMessage);
-            } else {
-                // Send SMS based on current order status
-                switch ($order->status) {
-                    case 'processing':
-                        $this->smsService->sendOrderProcessing($order);
-                        break;
-                    case 'shipped':
-                        $this->smsService->sendOrderShipped($order, $order->tracking_number);
-                        break;
-                    case 'delivered':
-                        $this->smsService->sendOrderDelivered($order);
-                        break;
-                    case 'cancelled':
-                        $this->smsService->sendOrderCancelled($order);
-                        break;
-                    default:
-                        // Send a generic order update SMS
-                       // $this->smsService->sendOrderUpdate($order);
-                        break;
-                }
-            }
-
-            return back()->with('success', 'SMS notification sent successfully to ' . $order->user->phone . '!');
+            $this->smsService->sendOrderCancelled($order);
+            Mail::to($order->user->email)
+                ->send(new OrderStatusUpdated($order, $order->status, 'cancelled'));
         } catch (\Exception $e) {
-            Log::error('SMS sending failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to send SMS: ' . $e->getMessage());
+            Log::error('Admin cancellation notification failed: ' . $e->getMessage());
         }
+
+        Log::info('Order cancelled by admin', [
+            'order_id' => $order->id,
+            'admin_id' => auth()->id(),
+            'reason' => $request->cancellation_reason
+        ]);
+
+        return back()->with('success', 'Order has been cancelled successfully.');
     }
+
+    /**
+     * Admin: Show cancellation form
+     */
+    public function showAdminCancelForm($id)
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $order = Order::with('user')->findOrFail($id);
+        return view('admin.orders.cancel', compact('order'));
+    }
+
+    // ... rest of your existing methods ...
 }

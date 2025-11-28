@@ -12,6 +12,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon.ico') }}">
 
@@ -703,14 +708,14 @@
                                 </a>
                             @endif
 
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            {{-- Logout Form - FIXED --}}
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST">
                                 @csrf
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Logout</span>
+                                </button>
                             </form>
-                            <button class="dropdown-item"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Logout</span>
-                            </button>
                         </div>
                     </div>
                 @else
@@ -818,13 +823,15 @@
                             </div>
                             <span class="social-label">Facebook</span>
                         </a>
-                        <a href="https://www.instagram.com/balayansmashershub?igsh=MTB0cDhkaGpydmxoMA==" target="_blank" class="social-icon-box instagram">
+                        <a href="https://www.instagram.com/balayansmashershub?igsh=MTB0cDhkaGpydmxoMA=="
+                            target="_blank" class="social-icon-box instagram">
                             <div class="social-icon-circle">
                                 <i class="fab fa-instagram"></i>
                             </div>
                             <span class="social-label">Instagram</span>
                         </a>
-                        <a href="https://www.tiktok.com/@balayansmashershub?_r=1&_d=secCgYIASAHKAESPgo8D%2FtiHMpa%2FulTb%2BVOsKneJvM%2B6i6DTUKw2JDySp1p8lr0o1uNzRaTjhk%2F3zL5u%2Bl7fouaDckcg%2FTXv2DDGgA%3D&_svg=1&checksum=015b60f435c1f682796bb260601ee2a927821f58359609d3409e5f88093a436f&item_author_type=2&sec_uid=MS4wLjABAAAAJaRZz3eUD6CKSOphPR4EZ7eOQrUUUkGaMu30HGG2EwACoO6D-rKlgG07Pe97HyY4&sec_user_id=MS4wLjABAAAA9E-lp0eAlo6A7cCVrNuPipgmuMgMSLj1NKgnIFkjl1aGRQ5dyv219yL3jkHYckwr&share_app_id=1180&share_author_id=7442688988743697425&share_link_id=5E7088FE-1E6F-48BA-B228-8B078411914E&share_region=PH&share_scene=1&sharer_language=en&social_share_type=5&source=h5_t&timestamp=1764311343&tt_from=copy&u_code=30d1m20328hmb&ug_btm=b6880%2Cb5836&user_id=66285948765802496&utm_campaign=client_share&utm_medium=ios&utm_source=copy" target="_blank" class="social-icon-box tiktok">
+                        <a href="https://www.tiktok.com/@balayansmashershub?_r=1&_d=secCgYIASAHKAESPgo8D%2FtiHMpa%2FulTb%2BVOsKneJvM%2B6i6DTUKw2JDySp1p8lr0o1uNzRaTjhk%2F3zL5u%2Bl7fouaDckcg%2FTXv2DDGgA%3D&_svg=1&checksum=015b60f435c1f682796bb260601ee2a927821f58359609d3409e5f88093a436f&item_author_type=2&sec_uid=MS4wLjABAAAAJaRZz3eUD6CKSOphPR4EZ7eOQrUUUkGaMu30HGG2EwACoO6D-rKlgG07Pe97HyY4&sec_user_id=MS4wLjABAAAA9E-lp0eAlo6A7cCVrNuPipgmuMgMSLj1NKgnIFkjl1aGRQ5dyv219yL3jkHYckwr&share_app_id=1180&share_author_id=7442688988743697425&share_link_id=5E7088FE-1E6F-48BA-B228-8B078411914E&share_region=PH&share_scene=1&sharer_language=en&social_share_type=5&source=h5_t&timestamp=1764311343&tt_from=copy&u_code=30d1m20328hmb&ug_btm=b6880%2Cb5836&user_id=66285948765802496&utm_campaign=client_share&utm_medium=ios&utm_source=copy"
+                            target="_blank" class="social-icon-box tiktok">
                             <div class="social-icon-circle">
                                 <i class="fab fa-tiktok"></i>
                             </div>

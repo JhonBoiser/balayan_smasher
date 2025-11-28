@@ -62,7 +62,7 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1'
         ]);
 
-        $cartItem = Cart::where('user_id', auth())
+        $cartItem = Cart::where('user_id', auth()->id()) // FIXED: auth()->id()
             ->where('id', $id)
             ->firstOrFail();
 
@@ -78,7 +78,7 @@ class CartController extends Controller
 
     public function remove($id)
     {
-        Cart::where('user_id', auth())
+        Cart::where('user_id', auth()->id()) // FIXED: auth()->id()
             ->where('id', $id)
             ->delete();
 
@@ -87,7 +87,7 @@ class CartController extends Controller
 
     public function clear()
     {
-        Cart::where('user_id', auth())->delete();
+        Cart::where('user_id', auth()->id())->delete(); // FIXED: auth()->id()
         return back()->with('success', 'Cart cleared!');
     }
 }

@@ -143,12 +143,54 @@ class ProductController extends Controller
             ->with('success', 'Product deleted successfully!');
     }
 
-    public function deleteImage($id)
+    public function deleteImage(Request $request, $id)
     {
         $image = ProductImage::findOrFail($id);
         Storage::disk('public')->delete($image->image_path);
         $image->delete();
 
+        // If the request expects JSON (AJAX), return JSON response
+        if ($request->wantsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json(['success' => true]);
+        }
+
         return back()->with('success', 'Image deleted successfully!');
+    }
+
+    /**
+     * Delete image using product-scoped route (keeps compatibility with different JS endpoints)
+     */
+    public function deleteImageFromProduct(Request $request, $productId, $id)
+    {
+        // Delegate to existing deleteImage method (which accepts Request, $id)
+        return $this->deleteImage($request, $id);
+    }
+
+    /**
+     * Set an image as primary for a specific product
+     */
+    public function setPrimaryImage(Request $request, $productId, $id)
+    {
+        $image = ProductImage::findOrFail($id);
+
+        // Ensure image belongs to the product, otherwise reject
+        if ($image->product_id != $productId) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Image does not belong to product'], 400);
+            }
+            return back()->with('error', 'Image does not belong to product');
+        }
+
+        // Unset other primary flags for the product
+        ProductImage::where('product_id', $productId)->update(['is_primary' => false]);
+
+        $image->is_primary = true;
+        $image->save();
+
+        if ($request->wantsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Primary image updated');
     }
 }

@@ -69,6 +69,7 @@
         padding: 20px 0;
         border-bottom: 1px solid #f0f0f0;
         align-items: center;
+        position: relative;
     }
 
     .cart-item:last-child {
@@ -205,6 +206,14 @@
         transform: translateY(-1px);
     }
 
+    /* Mobile Delete Button */
+    .mobile-delete-btn {
+        display: none;
+        position: absolute;
+        top: 20px;
+        right: 0;
+    }
+
     /* Order Summary */
     .order-summary {
         background: white;
@@ -303,6 +312,13 @@
         text-decoration: none;
     }
 
+    .btn-checkout:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
     .btn-continue-shopping {
         width: 100%;
         padding: 14px;
@@ -377,12 +393,57 @@
         text-decoration: none;
     }
 
-    /* Mobile Delete Button */
-    .mobile-delete-btn {
-        display: none;
-        position: absolute;
-        top: 20px;
-        right: 0;
+    /* Stock Warning */
+    .stock-warning {
+        color: #dc3545;
+        font-size: 0.8rem;
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .unavailable-product {
+        opacity: 0.6;
+        background-color: #f8f9fa;
+    }
+
+    .unavailable-badge {
+        background: #dc3545;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    /* Image Error State */
+    .image-error {
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 0.8rem;
+        text-align: center;
+        padding: 10px;
+    }
+
+    /* Checkout Warning */
+    .checkout-warning {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+        color: #856404;
+    }
+
+    .checkout-warning i {
+        color: #ffc107;
+        margin-right: 8px;
     }
 
     /* Responsive */
@@ -541,30 +602,89 @@
             <!-- Cart Items -->
             <div class="cart-items">
                 <div class="cart-header">
-                    <h3>Cart Items</h3>
+                    <h3>Cart Items ({{ $cartItems->count() }})</h3>
                 </div>
                 <div class="cart-body">
+                    @php
+                        $hasUnavailableProducts = false;
+                        $availableItemsCount = 0;
+                    @endphp
+
                     @foreach($cartItems as $item)
-                    <div class="cart-item">
+                    @php
+                        $isProductAvailable = $item->product && $item->product->exists;
+                        if (!$isProductAvailable) {
+                            $hasUnavailableProducts = true;
+                        } else {
+                            $availableItemsCount++;
+                        }
+                    @endphp
+
+                    <div class="cart-item {{ !$isProductAvailable ? 'unavailable-product' : '' }}">
                         <div class="item-info">
                             <div class="item-image">
-                                @if($item->product->primaryImage)
-                                    <img src="{{ asset('storage/' . $item->product->primaryImage->image_path) }}" alt="{{ $item->product->name }}">
-                                @else
-                                    <img src="https://via.placeholder.com/300x300?text=No+Image" alt="{{ $item->product->name }}">
-                                @endif
+                                @php
+                                    $imageUrl = 'https://via.placeholder.com/300x300?text=No+Image';
+                                    $imageAlt = $item->product->name ?? 'Product Image';
+
+                                    // Multiple fallback methods for product image
+                                    if ($item->product && $item->product->primaryImage) {
+                                        $imagePath = $item->product->primaryImage->image_path;
+                                        if (strpos($imagePath, 'http') === 0) {
+                                            $imageUrl = $imagePath;
+                                        } else {
+                                            $imageUrl = asset('storage/' . $imagePath);
+                                        }
+                                    } elseif ($item->product && $item->product->images && $item->product->images->count() > 0) {
+                                        $firstImage = $item->product->images->first();
+                                        $imagePath = $firstImage->image_path;
+                                        if (strpos($imagePath, 'http') === 0) {
+                                            $imageUrl = $imagePath;
+                                        } else {
+                                            $imageUrl = asset('storage/' . $imagePath);
+                                        }
+                                    } elseif ($item->product && $item->product->image_url) {
+                                        $imageUrl = $item->product->image_url;
+                                    }
+                                @endphp
+
+                                <img src="{{ $imageUrl }}"
+                                     alt="{{ $imageAlt }}"
+                                     onerror="this.onerror=null; this.src='https://via.placeholder.com/300x300?text=Image+Not+Found';">
                             </div>
                             <div class="item-details">
-                                <h4>{{ $item->product->name }}</h4>
-                                <div class="item-category">{{ $item->product->category->name }}</div>
+                                <h4>
+                                    {{ $item->product->name ?? 'Product Not Available' }}
+                                    @if(!$isProductAvailable)
+                                        <span class="unavailable-badge">UNAVAILABLE</span>
+                                    @endif
+                                </h4>
+                                <div class="item-category">
+                                    {{ $item->product->category->name ?? 'Uncategorized' }}
+                                </div>
+
+                                @if($isProductAvailable && $item->product->stock < $item->quantity)
+                                    <div class="stock-warning">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Only {{ $item->product->stock }} left in stock
+                                    </div>
+                                @endif
+
+                                @if(!$isProductAvailable)
+                                    <div class="stock-warning">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        This product is no longer available and will be removed at checkout
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
                         <div class="item-price">
-                            ₱{{ number_format($item->product->getCurrentPrice(), 2) }}
+                            ₱{{ number_format($item->product ? $item->product->getCurrentPrice() : 0, 2) }}
                         </div>
 
                         <div class="quantity-control">
+                            @if($isProductAvailable)
                             <form action="{{ route('cart.update', $item->id) }}" method="POST" class="quantity-form">
                                 @csrf
                                 @method('PATCH')
@@ -573,13 +693,20 @@
                                     <i class="fas fa-minus"></i>
                                 </button>
                                 <input type="number" name="quantity" class="quantity-input"
-                                       value="{{ $item->quantity }}" min="1" max="{{ $item->product->stock }}"
-                                       id="quantity-{{ $item->id }}" readonly>
-                                <button type="button" class="quantity-btn plus-btn" onclick="increaseQuantity({{ $item->id }}, {{ $item->product->stock }})"
-                                        {{ $item->quantity >= $item->product->stock ? 'disabled' : '' }}>
+                                       value="{{ $item->quantity }}"
+                                       min="1"
+                                       max="{{ $item->product->stock ?? 1 }}"
+                                       id="quantity-{{ $item->id }}"
+                                       readonly>
+                                <button type="button" class="quantity-btn plus-btn"
+                                        onclick="increaseQuantity({{ $item->id }}, {{ $item->product->stock ?? 999 }})"
+                                        {{ $item->quantity >= ($item->product->stock ?? 1) ? 'disabled' : '' }}>
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </form>
+                            @else
+                            <div class="text-muted small">Not available</div>
+                            @endif
                         </div>
 
                         <div class="item-subtotal">
@@ -591,7 +718,7 @@
                             <form action="{{ route('cart.remove', $item->id) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn-remove" title="Remove item">
+                                <button type="submit" class="btn-remove" title="Remove item" onclick="return confirm('Are you sure you want to remove this item?')">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
@@ -602,7 +729,7 @@
                             <form action="{{ route('cart.remove', $item->id) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn-remove" title="Remove item">
+                                <button type="submit" class="btn-remove" title="Remove item" onclick="return confirm('Are you sure you want to remove this item?')">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
@@ -618,8 +745,15 @@
                     <h3>Order Summary</h3>
                 </div>
                 <div class="summary-body">
+                    @if($hasUnavailableProducts)
+                    <div class="checkout-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Note:</strong> Some items in your cart are unavailable and will be automatically removed during checkout.
+                    </div>
+                    @endif
+
                     <div class="summary-row">
-                        <span class="summary-label">Subtotal:</span>
+                        <span class="summary-label">Items ({{ $availableItemsCount }} available):</span>
                         <span class="summary-value">₱{{ number_format($subtotal, 2) }}</span>
                     </div>
                     <div class="summary-row">
@@ -634,6 +768,7 @@
                         <span class="total-value">₱{{ number_format($total, 2) }}</span>
                     </div>
 
+                    <!-- ALWAYS ENABLED CHECKOUT BUTTON -->
                     <a href="{{ route('checkout.index') }}" class="btn-checkout">
                         <i class="fas fa-credit-card"></i>
                         Proceed to Checkout
@@ -643,6 +778,15 @@
                         <i class="fas fa-arrow-left"></i>
                         Continue Shopping
                     </a>
+
+                    @if($hasUnavailableProducts)
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            Unavailable items will be removed automatically during checkout
+                        </small>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -667,6 +811,8 @@
 // Quantity control functions
 function increaseQuantity(itemId, maxStock) {
     const input = document.getElementById(`quantity-${itemId}`);
+    if (!input) return;
+
     const currentValue = parseInt(input.value);
     const plusBtn = input.nextElementSibling;
 
@@ -676,7 +822,7 @@ function increaseQuantity(itemId, maxStock) {
 
         // Enable minus button if it was disabled
         const minusBtn = input.previousElementSibling;
-        minusBtn.disabled = false;
+        if (minusBtn) minusBtn.disabled = false;
 
         // Disable plus button if reached max
         if (currentValue + 1 >= maxStock) {
@@ -687,6 +833,8 @@ function increaseQuantity(itemId, maxStock) {
 
 function decreaseQuantity(itemId) {
     const input = document.getElementById(`quantity-${itemId}`);
+    if (!input) return;
+
     const currentValue = parseInt(input.value);
     const minusBtn = input.previousElementSibling;
 
@@ -696,7 +844,7 @@ function decreaseQuantity(itemId) {
 
         // Enable plus button if it was disabled
         const plusBtn = input.nextElementSibling;
-        plusBtn.disabled = false;
+        if (plusBtn) plusBtn.disabled = false;
 
         // Disable minus button if reached min
         if (currentValue - 1 <= 1) {
@@ -706,13 +854,17 @@ function decreaseQuantity(itemId) {
 }
 
 function updateQuantity(itemId, quantity) {
-    const form = document.querySelector(`#quantity-${itemId}`).closest('form');
-    const formData = new FormData(form);
+    const form = document.querySelector(`#quantity-${itemId}`)?.closest('form');
+    if (!form) return;
+
+    const formData = new FormData();
+    formData.append('quantity', quantity);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    formData.append('_method', 'PATCH');
 
     fetch(form.action, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
@@ -721,15 +873,28 @@ function updateQuantity(itemId, quantity) {
         if (response.ok) {
             // Reload the page to update totals
             window.location.reload();
+        } else {
+            console.error('Failed to update quantity');
+            alert('Failed to update quantity. Please try again.');
         }
     })
     .catch(error => {
         console.error('Error updating quantity:', error);
+        alert('Error updating quantity. Please try again.');
     });
 }
 
-// Add smooth animations
+// Image error handling
 document.addEventListener('DOMContentLoaded', function() {
+    // Handle image errors
+    const images = document.querySelectorAll('.item-image img');
+    images.forEach(img => {
+        img.addEventListener('error', function() {
+            this.src = 'https://via.placeholder.com/300x300?text=Image+Not+Found';
+            this.alt = 'Image not available';
+        });
+    });
+
     // Add fade-in animation to cart items
     const cartItems = document.querySelectorAll('.cart-item');
     cartItems.forEach((item, index) => {
@@ -743,32 +908,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }, index * 100);
     });
 
-    // Add hover effects
-    const removeButtons = document.querySelectorAll('.btn-remove');
-    removeButtons.forEach(button => {
-        button.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.1)';
-        });
-        button.addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1)';
-        });
-    });
-
-    // Add hover effects to quantity buttons
-    const quantityButtons = document.querySelectorAll('.quantity-btn');
-    quantityButtons.forEach(button => {
-        button.addEventListener('mouseenter', function() {
-            if (!this.disabled) {
-                this.style.borderColor = 'var(--primary-green)';
-                this.style.color = 'var(--primary-green)';
-            }
-        });
-        button.addEventListener('mouseleave', function() {
-            if (!this.disabled) {
-                this.style.borderColor = '#e8ecef';
-                this.style.color = '#6c757d';
-            }
-        });
+    // Add confirmation for delete buttons
+    const deleteForms = document.querySelectorAll('form[action*="cart"]');
+    deleteForms.forEach(form => {
+        if (form.action.includes('remove')) {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Are you sure you want to remove this item from your cart?')) {
+                    e.preventDefault();
+                }
+            });
+        }
     });
 });
 </script>

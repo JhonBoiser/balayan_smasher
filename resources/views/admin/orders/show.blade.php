@@ -421,7 +421,7 @@ s/admin/orders/show.blade.php --}}
                     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#emailModal">
                         <i class="bi bi-envelope"></i> Send Email
                     </button>
-                    
+
                     <button class="btn btn-outline-info" onclick="window.print()">
                         <i class="bi bi-printer"></i> Print Invoice
                     </button>
@@ -450,10 +450,6 @@ s/admin/orders/show.blade.php --}}
                         <small class="text-muted">Customer will be notified</small>
                     </div>
 
-                    <div class="mb-3" id="trackingNumberField" style="display: {{ in_array($order->status, ['pending', 'processing']) ? 'block' : 'none' }};">
-                        <label class="form-label">Tracking # (Optional)</label>
-                        <input type="text" name="tracking_number" id="trackingNumber" class="form-control" placeholder="Enter tracking number" value="{{ $order->tracking_number ?? '' }}">
-                    </div>
 
                     <button type="submit" class="btn btn-primary w-100" id="statusUpdateBtn">
                         <i class="bi bi-check-circle"></i> Update & Notify

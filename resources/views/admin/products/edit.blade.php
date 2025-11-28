@@ -97,16 +97,10 @@
                                     @if($image->is_primary)
                                         <span class="badge bg-primary position-absolute top-0 start-0 m-1">Primary</span>
                                     @endif
-                                    <form action="{{ route('admin.products.image.delete', $image->id) }}"
-                                          method="POST"
-                                          class="position-absolute top-0 end-0 m-1"
-                                          onsubmit="return confirm('Delete this image?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">
-                                            <i class="bi bi-trash">X</i>
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 delete-image-btn"
+                                            data-image-id="{{ $image->id }}" title="Delete image">
+                                        <i class="bi bi-trash">X</i>
+                                    </button>
                                 </div>
                             </div>
                             @endforeach
@@ -285,6 +279,50 @@
 
                 reader.readAsDataURL(file);
             }
+        });
+    });
+
+    // AJAX delete for product images (avoids nested forms)
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.delete-image-btn')) return;
+
+        const btn = e.target.closest('.delete-image-btn');
+        const imageId = btn.dataset.imageId;
+
+        if (!imageId) return;
+
+        if (!confirm('Delete this image?')) return;
+
+        btn.disabled = true;
+        const originalHtml = btn.innerHTML;
+
+        fetch(`/admin/products/image/${imageId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // If server returned JSON { success: true }
+            if (data && data.success) {
+                const col = btn.closest('.col-3');
+                if (col) col.remove();
+                return;
+            }
+
+            // Non-JSON or failure path
+            alert('Error deleting image: ' + (data && data.message ? data.message : 'Unknown error'));
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error deleting image. See console for details.');
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
         });
     });
 </script>

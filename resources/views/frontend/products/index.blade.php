@@ -664,18 +664,6 @@
                     </ul>
                 </div>
 
-                <!-- Price Range -->
-                <div class="sidebar-section">
-                    <h3 class="sidebar-title">
-                        <i class="fas fa-tag"></i>
-                        Price Range
-                    </h3>
-                    <div class="price-inputs">
-                        <input type="number" class="price-input" placeholder="Min ₱" min="0" id="minPrice">
-                        <input type="number" class="price-input" placeholder="Max ₱" min="0" id="maxPrice">
-                    </div>
-                    <button class="apply-filter-btn" id="applyPriceFilter">Apply Filter</button>
-                </div>
             </aside>
 
             <!-- Main Content -->
@@ -724,7 +712,7 @@
                             <div class="product-name">{{ $product->name }}</div>
                             <div class="product-colors">{{ Str::limit($product->description, 60) }}</div>
 
-                           
+
                             <div class="product-price">
                                 @if($product->isOnSale())
                                     ₱{{ number_format($product->sale_price, 0) }}

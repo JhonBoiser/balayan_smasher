@@ -27,8 +27,14 @@ Route::get('/contact', function () {
     return view('contact');
 })->name('contact');
 
-// AUTHENTICATION
-Auth::routes();
+// AUTHENTICATION ROUTES - FIXED
+Auth::routes(['verify' => false]); // Disable verification if not needed
+
+// MANUAL LOGOUT ROUTE - ADD THIS
+Route::post('/logout', function () {
+    Auth::logout();
+    return redirect('/');
+})->name('logout');
 
 // CUSTOMER ROUTES (AUTH REQUIRED)
 Route::middleware(['auth'])->group(function () {
@@ -51,6 +57,11 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
         Route::get('/{id}', [OrderController::class, 'show'])->name('show');
+
+        // ORDER CANCELLATION ROUTES - ADDED
+        Route::get('/{id}/cancel', [OrderController::class, 'showCancelForm'])->name('cancel.form');
+        Route::post('/{id}/cancel', [OrderController::class, 'cancelOrder'])->name('cancel');
+
         // Customer actions on their orders
         Route::patch('/{id}/status', [OrderController::class, 'updateStatus'])->name('status');
         Route::patch('/{id}/payment', [OrderController::class, 'updatePaymentStatus'])->name('payment');
@@ -63,17 +74,21 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Admin Search Routes - ADD THESE ROUTES
+    // Dashboard API for charts
+    Route::get('/dashboard/revenue-data', [DashboardController::class, 'revenueData'])->name('dashboard.revenue-data');
+
+    // Admin Search Routes
     Route::get('/search', [SearchController::class, 'globalSearch'])->name('search');
     Route::get('/search/advanced', [SearchController::class, 'advancedSearch'])->name('search.advanced');
 
-    // Recent orders for notifications - ADD THIS ROUTE
+    // Recent orders for notifications
     Route::get('/orders/recent', [SearchController::class, 'recentOrders'])->name('orders.recent');
 
     // Admin Products
     Route::resource('products', AdminProductController::class);
-    // Match controller signature: deleteImage($id) expects the image id only
     Route::delete('products/image/{id}', [AdminProductController::class, 'deleteImage'])->name('products.image.delete');
+    Route::delete('products/{product}/images/{id}', [AdminProductController::class, 'deleteImageFromProduct'])->name('products.images.delete');
+    Route::post('products/{product}/images/{id}/set-primary', [AdminProductController::class, 'setPrimaryImage'])->name('products.images.set-primary');
 
     // Admin Categories
     Route::resource('categories', AdminCategoryController::class);
@@ -84,8 +99,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{id}', [AdminOrderController::class, 'show'])->name('show');
         Route::get('/{id}/check-updates', [AdminOrderController::class, 'checkUpdates'])->name('check-updates');
 
-        // Remove this duplicate route since we added it above with SearchController
-        // Route::get('/recent', [AdminOrderController::class, 'getRecentOrders'])->name('recent');
+        // ADMIN ORDER CANCELLATION ROUTES - ADDED
+        Route::get('/{id}/cancel', [AdminOrderController::class, 'showAdminCancelForm'])->name('cancel.form');
+        Route::post('/{id}/cancel', [AdminOrderController::class, 'adminCancelOrder'])->name('cancel');
 
         Route::get('/export', [AdminOrderController::class, 'export'])->name('export');
         Route::get('/bulk-update', function() {
@@ -101,11 +117,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 });
 
+// Public legal pages
+Route::view('/terms', 'terms')->name('terms');
+Route::view('/privacy', 'privacy')->name('privacy');
+
 // FALLBACK ROUTE
 Route::fallback(function () {
     return redirect()->route('login');
 });
-
-// Public legal pages
-Route::view('/terms', 'terms')->name('terms');
-Route::view('/privacy', 'privacy')->name('privacy');
