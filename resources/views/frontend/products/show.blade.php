@@ -659,16 +659,6 @@
                 <span class="category-badge">{{ $product->category->name }}</span>
                 <h1 class="product-title">{{ $product->name }}</h1>
 
-                <div class="product-rating">
-                    <div class="stars">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star-half-alt"></i>
-                    </div>
-                    <span class="rating-text">4.5 <span class="review-count">(128 reviews)</span></span>
-                </div>
 
                 <div class="price-section">
                     @if($product->isOnSale())

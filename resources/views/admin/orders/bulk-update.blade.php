@@ -142,13 +142,13 @@
 
             if (!anyChecked) {
                 e.preventDefault();
-                alert('Please select at least one order');
+                showDialog('Validation', 'Please select at least one order', 'warning');
                 return false;
             }
 
             if (!status) {
                 e.preventDefault();
-                alert('Please select a status');
+                showDialog('Validation', 'Please select a status', 'warning');
                 return false;
             }
 

@@ -402,21 +402,8 @@
                                     </label>
                                 </div>
 
-                                <div class="payment-option" onclick="selectPayment('gcash')">
-                                    <input class="payment-input" type="radio" name="payment_method" value="gcash" id="gcash">
-                                    <label class="payment-label" for="gcash">
-                                        <i class="fas fa-mobile-alt payment-icon"></i>
-                                        GCash
-                                    </label>
-                                </div>
 
-                                <div class="payment-option" onclick="selectPayment('bank_transfer')">
-                                    <input class="payment-input" type="radio" name="payment_method" value="bank_transfer" id="bank">
-                                    <label class="payment-label" for="bank">
-                                        <i class="fas fa-university payment-icon"></i>
-                                        Bank Transfer
-                                    </label>
-                                </div>
+
                             </div>
 
                             <div class="form-group" style="margin-top: 24px;">

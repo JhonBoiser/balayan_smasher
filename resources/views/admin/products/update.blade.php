@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Validate file size (5MB)
             if (file.size > 5 * 1024 * 1024) {
-                alert('File ' + file.name + ' is too large. Maximum size is 5MB.');
+                showDialog('File Too Large', 'File ' + file.name + ' is too large. Maximum size is 5MB.', 'error');
                 continue;
             }
 
@@ -455,12 +455,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.success) {
                         location.reload();
                     } else {
-                        alert('Error setting primary image');
+                        showDialog('Error', 'Error setting primary image', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Error setting primary image');
+                    showDialog('Error', 'Error setting primary image', 'error');
                 });
             }
         });
@@ -482,12 +482,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.success) {
                         document.querySelector(`[data-image-id="${imageId}"]`).closest('.col-6').remove();
                     } else {
-                        alert('Error deleting image');
+                        showDialog('Error', 'Error deleting image', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Error deleting image');
+                    showDialog('Error', 'Error deleting image', 'error');
                 });
             }
         });
@@ -499,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     salePrice.addEventListener('change', function() {
         if (this.value && parseFloat(this.value) >= parseFloat(regularPrice.value)) {
-            alert('Sale price must be less than regular price');
+            showDialog('Price Error', 'Sale price must be less than regular price', 'error');
             this.value = '';
         }
     });

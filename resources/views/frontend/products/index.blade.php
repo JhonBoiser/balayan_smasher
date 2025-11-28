@@ -724,18 +724,7 @@
                             <div class="product-name">{{ $product->name }}</div>
                             <div class="product-colors">{{ Str::limit($product->description, 60) }}</div>
 
-                            <div class="product-rating">
-                                <div class="stars">
-                                    <!-- Static rating for demo - you can replace with actual ratings -->
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star-half-alt"></i>
-                                </div>
-                                <span class="rating-text">(4.5)</span>
-                            </div>
-
+                           
                             <div class="product-price">
                                 @if($product->isOnSale())
                                     ₱{{ number_format($product->sale_price, 0) }}

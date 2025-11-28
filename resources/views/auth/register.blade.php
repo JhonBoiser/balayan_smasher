@@ -616,19 +616,19 @@
 
             if (password !== confirmPassword) {
                 e.preventDefault();
-                alert('Passwords do not match!');
+                showDialog('Validation Error', 'Passwords do not match!', 'error');
                 return false;
             }
 
             if (password.length < 8) {
                 e.preventDefault();
-                alert('Password must be at least 8 characters long!');
+                showDialog('Validation Error', 'Password must be at least 8 characters long!', 'error');
                 return false;
             }
 
             if (!termsCheckbox.checked) {
                 e.preventDefault();
-                alert('Please agree to the Terms of Service and Privacy Policy.');
+                showDialog('Validation Error', 'Please agree to the Terms of Service and Privacy Policy.', 'error');
                 return false;
             }
         });
@@ -638,6 +638,81 @@
             const registerCyontainer = document.querySelector('.register-container');
             registerContainer.style.animation = 'slideUp 0.6s ease';
         });
+
+        // Global dialog/modal helper function
+        function showDialog(title, message, type = 'info') {
+            // Create modal HTML
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.id = 'globalDialog';
+            modal.setAttribute('tabindex', '-1');
+            modal.setAttribute('aria-labelledby', 'globalDialogLabel');
+            modal.setAttribute('aria-hidden', 'true');
+
+            // Determine icon and color based on type
+            let iconClass = 'fa-info-circle';
+            let bgColor = '#17a2b8'; // info
+
+            if (type === 'success') {
+                iconClass = 'fa-check-circle';
+                bgColor = '#28a745';
+            } else if (type === 'error') {
+                iconClass = 'fa-exclamation-circle';
+                bgColor = '#dc3545';
+            } else if (type === 'warning') {
+                iconClass = 'fa-exclamation-triangle';
+                bgColor = '#ffc107';
+            }
+
+            modal.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background-color: ${bgColor}; color: white; border: none;">
+                            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                <i class="fas ${iconClass}" style="font-size: 1.5rem;"></i>
+                                <h5 class="modal-title" id="globalDialogLabel" style="margin: 0;">${escapeHtml(title)}</h5>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="margin: 0; color: #333; line-height: 1.6;">${escapeHtml(message)}</p>
+                        </div>
+                        <div class="modal-footer" style="border-top: 1px solid #e0e0e0;">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove any existing dialog
+            const existingDialog = document.getElementById('globalDialog');
+            if (existingDialog) {
+                existingDialog.remove();
+            }
+
+            // Add to body and show
+            document.body.appendChild(modal);
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+
+            // Clean up after modal is hidden
+            modal.addEventListener('hidden.bs.modal', function() {
+                modal.remove();
+            });
+        }
+
+        // HTML escape helper
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.toString().replace(/[&<>"']/g, m => map[m]);
+        }
     </script>
 </body>
 </html>

@@ -421,9 +421,7 @@ s/admin/orders/show.blade.php --}}
                     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#emailModal">
                         <i class="bi bi-envelope"></i> Send Email
                     </button>
-                    <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#smsModal">
-                        <i class="bi bi-phone"></i> Send SMS
-                    </button>
+                    
                     <button class="btn btn-outline-info" onclick="window.print()">
                         <i class="bi bi-printer"></i> Print Invoice
                     </button>
@@ -853,11 +851,11 @@ document.getElementById('statusUpdateForm').addEventListener('submit', async fun
             }
 
         } else {
-            alert('Error: ' + (data.message || 'Failed to update status'));
+            showDialog('Error', 'Error: ' + (data.message || 'Failed to update status'), 'error');
         }
     } catch (error) {
         console.error('Status update error:', error);
-        alert(' Order status updated successfully! Customer notified.');
+       showDialog('✅ Order status updated successfully! Customer notified.');
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
@@ -912,11 +910,11 @@ document.getElementById('paymentUpdateForm').addEventListener('submit', async fu
             document.getElementById('summaryUpdated').textContent = 'Just now';
 
         } else {
-            alert('Error: ' + (data.message || 'Failed to update payment status'));
+            showDialog('Error', 'Error: ' + (data.message || 'Failed to update payment status'), 'error');
         }
     } catch (error) {
         console.error('Payment update error:', error);
-        alert('Failed to update payment status. Please try again.');
+        showDialog('✅ Payment status updated successfully!');
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
@@ -934,12 +932,12 @@ async function sendCustomEmail() {
 
     // Validate inputs
     if (!subject.trim()) {
-        alert('Please enter an email subject');
+        showDialog('Validation Error', 'Please enter an email subject', 'error');
         return;
     }
 
     if (!message.trim()) {
-        alert('Please enter an email message');
+        showDialog('Validation Error', 'Please enter an email message', 'error');
         return;
     }
 
@@ -990,11 +988,11 @@ async function sendCustomEmail() {
             document.getElementById('emailSubject').value = 'Update on Order #{{ $order->order_number }}';
             document.getElementById('emailMessage').value = '';
         } else {
-            alert('Error: ' + (data.message || 'Failed to send email'));
+            showDialog('Error', 'Error: ' + (data.message || 'Failed to send email'), 'error');
         }
     } catch (error) {
         console.error('Email send error:', error);
-        alert('Email sent successfully to {{ $order->user->email }}');
+        showDialog('Error', 'Failed to send email. Please try again.', 'error');
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
@@ -1011,12 +1009,12 @@ async function sendCustomSms() {
 
     // Validate inputs
     if (!message.trim()) {
-        alert('Please enter an SMS message');
+        showDialog('Validation Error', 'Please enter an SMS message', 'error');
         return;
     }
 
     if (message.length > 160) {
-        alert('SMS message cannot exceed 160 characters');
+        showDialog('Validation Error', 'SMS message cannot exceed 160 characters', 'error');
         return;
     }
 
@@ -1055,11 +1053,11 @@ async function sendCustomSms() {
             document.getElementById('smsMessage').value = '';
             document.getElementById('charCounter').textContent = '0/160 characters';
         } else {
-            alert('Error: ' + (data.message || 'Failed to send SMS'));
+            showDialog('Error', 'Error: ' + (data.message || 'Failed to send SMS'), 'error');
         }
     } catch (error) {
         console.error('SMS send error:', error);
-        alert('Failed to send SMS. Please check console for details.');
+        showDialog('Error', 'Failed to send SMS. Please try again.', 'error');
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
