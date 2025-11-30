@@ -175,4 +175,9 @@ class Order extends Model
         return $query->whereIn('status', ['pending', 'processing'])
                     ->where('payment_status', '!=', 'paid');
     }
+
+    public function paymentTransactions()
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
 }

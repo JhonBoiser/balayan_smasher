@@ -649,19 +649,14 @@
                     <li><a href="{{ route('contact') }}"
                             class="{{ request()->routeIs('contact') ? 'active' : '' }}">Contact</a></li>
 
-                    {{-- My Orders - Only for authenticated customers --}}
-                    @auth
-                        @if (auth()->user()->isCustomer())
-                            <li><a href="{{ route('orders.index') }}"
-                                    class="{{ request()->routeIs('orders.*') ? 'active' : '' }}">My Orders</a></li>
-                        @endif
-                    @endauth
+
+
                 </ul>
             </nav>
 
             <!-- Header Actions -->
             <div class="header-actions">
-               
+
 
                 @auth
                     <!-- Cart Button -->
@@ -673,13 +668,7 @@
                         @endif
                     </a>
 
-                    <!-- Admin Dashboard -->
-                    @if (auth()->user()->isAdmin())
-                        <a href="{{ route('admin.dashboard') }}" class="action-btn">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    @endif
+                  
 
                     <!-- User Dropdown -->
                     <div class="user-dropdown">
@@ -789,13 +778,8 @@
                         <a href="{{ route('products.index') }}" class="footer-link">Products</a>
                         <a href="{{ route('about') }}" class="footer-link">About</a>
                         <a href="{{ route('contact') }}" class="footer-link">Contact</a>
-                      {{-- -<a href="{{ route('cart.index') }}" class="footer-link">Cart</a> --}}  
-                        {{-- My Orders in footer for authenticated customers --}}
-                        @auth
-                            @if (auth()->user()->isCustomer())
-                                <a href="{{ route('orders.index') }}" class="footer-link">My Orders</a>
-                            @endif
-                        @endauth
+                      {{-- -<a href="{{ route('cart.index') }}" class="footer-link">Cart</a> --}}
+
                     </div>
                 </div>
 

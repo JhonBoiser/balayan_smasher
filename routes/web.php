@@ -7,6 +7,7 @@ use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Frontend\OrderController;
+use App\Http\Controllers\Frontend\PaymentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -39,6 +40,15 @@ Route::post('/logout', function () {
 
 // CUSTOMER ROUTES (AUTH REQUIRED)
 Route::middleware(['auth'])->group(function () {
+        // Payment Routes
+        Route::prefix('payment')->name('payment.')->group(function () {
+            Route::get('/{id}', [PaymentController::class, 'show'])->name('show');
+            Route::post('/create-intent', [PaymentController::class, 'createIntent'])->name('create-intent');
+            Route::post('/process', [PaymentController::class, 'process'])->name('process');
+            Route::get('/{orderId}/return', [PaymentController::class, 'handleReturn'])->name('return');
+            Route::get('/{orderId}/failure', [PaymentController::class, 'handleFailure'])->name('failure');
+        });
+
     // Cart Routes - UPDATED WITH API ROUTES
     Route::prefix('cart')->name('cart.')->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('index');
@@ -176,6 +186,9 @@ Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
 // Public legal pages
 Route::view('/terms', 'terms')->name('terms');
 Route::view('/privacy', 'privacy')->name('privacy');
+
+// Webhook route (no auth required)
+Route::post('/webhook/paymongo', [PaymentController::class, 'webhook'])->name('webhook.paymongo');
 
 // FALLBACK ROUTE
 Route::fallback(function () {

@@ -67,7 +67,7 @@ class CheckoutController extends Controller
             'shipping_city' => 'required|string',
             'shipping_province' => 'required|string',
             'shipping_zipcode' => 'required|string',
-            'payment_method' => 'required|in:cod,gcash,card,paymaya,bank_transfer',
+            'payment_method' => 'required|in:cod,gcash,card,paymaya,bank_transfer,paymongo',
             'notes' => 'nullable|string|max:500'
         ]);
 
@@ -173,6 +173,14 @@ class CheckoutController extends Controller
                 'order_id' => $order->id,
                 'order_number' => $order->order_number
             ]);
+
+            // If PayMongo payment method, redirect to payment page
+            if ($request->payment_method === 'paymongo') {
+                return redirect()->route('payment.show', $order->id)
+                    ->with('success', 'Order created successfully! Please complete your payment.');
+            }
+
+            // For COD and other methods, order is ready
 
             return redirect()->route('home')
                 ->with('success', 'Order placed successfully! Your order number is: ' . $order->order_number . '. We will process your order shortly.');

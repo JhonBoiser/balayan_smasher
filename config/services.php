@@ -14,11 +14,17 @@ return [
     |
     */
 
-   'semaphore' => [
+    'semaphore' => [
     'api_key' => env('SEMAPHORE_API_KEY', 'd9925070033a48661de6ea5482fc9263'),
     'sender_name' => env('SEMAPHORE_SENDER_NAME', 'Smashers Hub'),
     'api_url' => 'https://api.semaphore.co/api/v4/messages',
 ],
+
+    'paymongo' => [
+        'public_key' => env('PAYMONGO_PUBLIC_KEY'),
+        'secret_key' => env('PAYMONGO_SECRET_KEY'),
+        'api_url' => 'https://api.paymongo.com/v1',
+    ],
 
 
     'postmark' => [

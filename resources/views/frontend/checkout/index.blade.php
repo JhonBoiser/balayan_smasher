@@ -402,6 +402,31 @@
                                     </label>
                                 </div>
 
+                                <div class="payment-option" onclick="selectPayment('paymongo_card')">
+                                    <input class="payment-input" type="radio" name="payment_method" value="paymongo" id="paymongo_card">
+                                    <label class="payment-label" for="paymongo_card">
+                                        <i class="fas fa-credit-card payment-icon"></i>
+                                        Card Payment (PayMongo)
+                                    </label>
+                                </div>
+
+                                <div class="payment-option" onclick="selectPayment('paymongo_gcash')">
+                                    <input class="payment-input" type="radio" name="payment_method" value="paymongo" id="paymongo_gcash">
+                                    <label class="payment-label" for="paymongo_gcash">
+                                        <i class="fas fa-mobile-alt payment-icon"></i>
+                                        GCash (PayMongo)
+                                    </label>
+                                </div>
+
+                                <div class="payment-option" onclick="selectPayment('paymongo_grab')">
+                                    <input class="payment-input" type="radio" name="payment_method" value="paymongo" id="paymongo_grab">
+                                    <label class="payment-label" for="paymongo_grab">
+                                        <i class="fas fa-wallet payment-icon"></i>
+                                        Grab Pay (PayMongo)
+                                    </label>
+                                </div>
+                            </div>
+
 
 
                             </div>
