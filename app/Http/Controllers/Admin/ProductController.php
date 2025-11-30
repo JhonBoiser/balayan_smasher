@@ -9,6 +9,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 
 class ProductController extends Controller
 {
@@ -29,6 +30,13 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        // Quick debug log to capture incoming create attempts (non-file fields only)
+        logger()->debug('Product store called', [
+            'name' => $request->input('name'),
+            'category_id' => $request->input('category_id'),
+            'sku' => $request->input('sku'),
+            'price' => $request->input('price'),
+        ]);
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
@@ -40,32 +48,60 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
+        try {
+            $product = Product::create([
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'category_id' => $request->category_id,
+                'description' => $request->description,
+                'specifications' => $request->specifications,
+                'price' => $request->price,
+                'sale_price' => $request->sale_price,
+                'sku' => $request->sku,
+                'stock' => $request->stock,
+                'low_stock_threshold' => $request->low_stock_threshold ?? 5,
+                'is_featured' => $request->has('is_featured'),
+                'is_active' => $request->has('is_active'),
+            ]);
+        } catch (\Exception $ex) {
+            logger()->error('Product creation failed', ['message' => $ex->getMessage(), 'request' => $request->all()]);
 
-        $product = Product::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'category_id' => $request->category_id,
-            'description' => $request->description,
-            'specifications' => $request->specifications,
-            'price' => $request->price,
-            'sale_price' => $request->sale_price,
-            'sku' => $request->sku,
-            'stock' => $request->stock,
-            'low_stock_threshold' => $request->low_stock_threshold ?? 5,
-            'is_featured' => $request->has('is_featured'),
-            'is_active' => $request->has('is_active'),
-        ]);
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to create product. Check logs for details.');
+        }
+
+        // Log product creation success (helps debugging whether create succeeded)
+        logger()->info('Product created successfully (store)', ['product_id' => $product->id]);
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
                 $path = $image->store('products', 'public');
+                $originalFilename = $image->getClientOriginalName();
+                $altText = $request->get("alt_text.{$index}") ?? str_replace(['_', '-'], ' ', pathinfo($originalFilename, PATHINFO_FILENAME));
 
-                ProductImage::create([
+                // Build data array and only include columns that exist in the DB.
+                $imageData = [
                     'product_id' => $product->id,
                     'image_path' => $path,
                     'is_primary' => $index === 0,
-                    'order' => $index
-                ]);
+                    'order' => $index,
+                ];
+
+                if (Schema::hasColumn('product_images', 'original_filename')) {
+                    $imageData['original_filename'] = $originalFilename;
+                }
+
+                if (Schema::hasColumn('product_images', 'alt_text')) {
+                    $imageData['alt_text'] = $altText;
+                }
+
+                try {
+                    ProductImage::create($imageData);
+                } catch (\Exception $ex) {
+                    // Log and continue; don't break product creation if images table is not synced.
+                    logger()->error('Failed to insert product image', ['exception' => $ex->getMessage(), 'data' => $imageData]);
+                }
             }
         }
 
@@ -114,13 +150,29 @@ class ProductController extends Controller
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
                 $path = $image->store('products', 'public');
+                $originalFilename = $image->getClientOriginalName();
+                $altText = $request->get("alt_text.{$index}") ?? str_replace(['_', '-'], ' ', pathinfo($originalFilename, PATHINFO_FILENAME));
 
-                ProductImage::create([
+                $imageData = [
                     'product_id' => $product->id,
                     'image_path' => $path,
                     'is_primary' => false,
-                    'order' => $product->images()->count() + $index
-                ]);
+                    'order' => $product->images()->count() + $index,
+                ];
+
+                if (Schema::hasColumn('product_images', 'original_filename')) {
+                    $imageData['original_filename'] = $originalFilename;
+                }
+
+                if (Schema::hasColumn('product_images', 'alt_text')) {
+                    $imageData['alt_text'] = $altText;
+                }
+
+                try {
+                    ProductImage::create($imageData);
+                } catch (\Exception $ex) {
+                    logger()->error('Failed to insert product image on update', ['exception' => $ex->getMessage(), 'data' => $imageData]);
+                }
             }
         }
 

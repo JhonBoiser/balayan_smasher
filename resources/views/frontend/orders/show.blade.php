@@ -11,7 +11,7 @@
     }
 
     .order-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+         background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
         color: white;
         padding: 30px;
         border-radius: 15px;

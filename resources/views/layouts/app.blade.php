@@ -661,10 +661,7 @@
 
             <!-- Header Actions -->
             <div class="header-actions">
-                <button class="action-btn" onclick="openSearch()">
-                    <i class="fas fa-search"></i>
-                    <span>Search</span>
-                </button>
+               
 
                 @auth
                     <!-- Cart Button -->
@@ -792,7 +789,7 @@
                         <a href="{{ route('products.index') }}" class="footer-link">Products</a>
                         <a href="{{ route('about') }}" class="footer-link">About</a>
                         <a href="{{ route('contact') }}" class="footer-link">Contact</a>
-                        <a href="{{ route('cart.index') }}" class="footer-link">Cart</a>
+                      {{-- -<a href="{{ route('cart.index') }}" class="footer-link">Cart</a> --}}  
                         {{-- My Orders in footer for authenticated customers --}}
                         @auth
                             @if (auth()->user()->isCustomer())

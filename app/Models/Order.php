@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Order extends Model
 {
@@ -35,6 +36,41 @@ class Order extends Model
                 $order->order_number = 'ORD-' . date('Ymd') . '-' . strtoupper(uniqid());
             }
         });
+
+        // Clear dashboard cache when order is created
+        static::created(function ($order) {
+            static::clearDashboardCache();
+        });
+
+        // Clear dashboard cache when order is updated
+        static::updated(function ($order) {
+            static::clearDashboardCache();
+        });
+
+        // Clear dashboard cache when order is deleted
+        static::deleted(function ($order) {
+            static::clearDashboardCache();
+        });
+    }
+
+    /**
+     * Clear all dashboard related caches
+     */
+    public static function clearDashboardCache()
+    {
+        cache()->forget('total_orders');
+        cache()->forget('total_revenue');
+        cache()->forget('pending_orders');
+        // Clear revenue data caches that match pattern
+        $keys = [
+            'revenue_data_week_',
+            'revenue_data_month_',
+            'revenue_data_year_',
+            'revenue_data_comparison_'
+        ];
+
+        // Force clear all caches for dashboard
+        Cache::flush();
     }
 
     public function user()

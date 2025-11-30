@@ -386,6 +386,44 @@
             font-weight: 500;
         }
 
+        /* Modal Styles */
+        .policy-modal .modal-header {
+            background: linear-gradient(135deg, #6ba932 0%, #5a9028 100%);
+            color: white;
+            border: none;
+        }
+
+        .policy-modal .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .policy-modal .modal-body {
+            max-height: 60vh;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .policy-modal .modal-body h4 {
+            color: #6ba932;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .policy-modal .modal-body p {
+            margin-bottom: 15px;
+        }
+
+        .policy-modal .modal-body ul {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .policy-modal .modal-body li {
+            margin-bottom: 8px;
+        }
+
         /* Responsive */
         @media (max-width: 576px) {
             .register-wrapper {
@@ -542,7 +580,9 @@
                     <div class="terms-checkbox">
                         <input type="checkbox" id="terms" name="terms" required>
                         <label for="terms" class="terms-text">
-                            I agree to Balayan Smashers Hub's <a href="#" target="_blank">Privacy Policy</a> and <a href="#" target="_blank">Terms of Service</a>
+                            I agree to Balayan Smashers Hub's
+                            <a href="#" onclick="showPrivacyPolicy()">Privacy Policy</a> and
+                            <a href="#" onclick="showTermsOfService()">Terms of Service</a>
                         </label>
                     </div>
                 </div>
@@ -561,6 +601,110 @@
                     <p>Already have an account? <a href="{{ route('login') }}">Sign In</a></p>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div class="modal fade policy-modal" id="privacyPolicyModal" tabindex="-1" aria-labelledby="privacyPolicyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="privacyPolicyModalLabel">
+                        <i class="fas fa-shield-alt"></i>
+                        Privacy Policy
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>1. Information We Collect</h4>
+                    <p>We collect information that you provide directly to us when you register for an account, including:</p>
+                    <ul>
+                        <li>Your full name</li>
+                        <li>Email address</li>
+                        <li>Account credentials</li>
+                        <li>Profile information</li>
+                    </ul>
+
+                    <h4>2. How We Use Your Information</h4>
+                    <p>We use the information we collect to:</p>
+                    <ul>
+                        <li>Create and maintain your account</li>
+                        <li>Provide and improve our services</li>
+                        <li>Communicate with you about your account</li>
+                        <li>Send you important updates and notifications</li>
+                        <li>Ensure the security of our platform</li>
+                    </ul>
+
+                    <h4>3. Data Protection</h4>
+                    <p>We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+
+                    <h4>4. Your Rights</h4>
+                    <p>You have the right to:</p>
+                    <ul>
+                        <li>Access your personal information</li>
+                        <li>Correct inaccurate data</li>
+                        <li>Request deletion of your data</li>
+                        <li>Object to processing of your data</li>
+                    </ul>
+
+                    <h4>5. Contact Us</h4>
+                    <p>If you have any questions about this Privacy Policy, please contact us at privacy@balayansmashers.com</p>
+
+                    <p><small><em>Last updated: January 2024</em></small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms of Service Modal -->
+    <div class="modal fade policy-modal" id="termsOfServiceModal" tabindex="-1" aria-labelledby="termsOfServiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsOfServiceModalLabel">
+                        <i class="fas fa-file-contract"></i>
+                        Terms of Service
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>1. Acceptance of Terms</h4>
+                    <p>By creating an account with Balayan Smashers Hub, you agree to be bound by these Terms of Service and our Privacy Policy.</p>
+
+                    <h4>2. Account Registration</h4>
+                    <p>You must provide accurate and complete information when creating an account. You are responsible for maintaining the confidentiality of your account credentials.</p>
+
+                    <h4>3. User Conduct</h4>
+                    <p>You agree not to:</p>
+                    <ul>
+                        <li>Use the service for any illegal purpose</li>
+                        <li>Harass, abuse, or harm other members</li>
+                        <li>Share inappropriate content</li>
+                        <li>Attempt to gain unauthorized access to other accounts</li>
+                        <li>Interfere with the proper functioning of the service</li>
+                    </ul>
+
+                    <h4>4. Service Modifications</h4>
+                    <p>We reserve the right to modify or discontinue any part of our service at any time. We will provide notice of significant changes to these terms.</p>
+
+                    <h4>5. Termination</h4>
+                    <p>We may suspend or terminate your account if you violate these terms or engage in behavior that harms our community.</p>
+
+                    <h4>6. Limitation of Liability</h4>
+                    <p>Balayan Smashers Hub shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the service.</p>
+
+                    <h4>7. Governing Law</h4>
+                    <p>These terms shall be governed by and construed in accordance with the laws of the Philippines.</p>
+
+                    <p><small><em>Last updated: January 2024</em></small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -608,6 +752,18 @@
             }
         }
 
+        // Show Privacy Policy Modal
+        function showPrivacyPolicy() {
+            const modal = new bootstrap.Modal(document.getElementById('privacyPolicyModal'));
+            modal.show();
+        }
+
+        // Show Terms of Service Modal
+        function showTermsOfService() {
+            const modal = new bootstrap.Modal(document.getElementById('termsOfServiceModal'));
+            modal.show();
+        }
+
         // Form validation
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             const password = document.getElementById('password').value;
@@ -635,7 +791,7 @@
 
         // Add animation on load
         document.addEventListener('DOMContentLoaded', function() {
-            const registerCyontainer = document.querySelector('.register-container');
+            const registerContainer = document.querySelector('.register-container');
             registerContainer.style.animation = 'slideUp 0.6s ease';
         });
 

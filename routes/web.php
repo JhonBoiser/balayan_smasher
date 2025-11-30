@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\CartController;
@@ -38,13 +39,17 @@ Route::post('/logout', function () {
 
 // CUSTOMER ROUTES (AUTH REQUIRED)
 Route::middleware(['auth'])->group(function () {
-    // Cart Routes
+    // Cart Routes - UPDATED WITH API ROUTES
     Route::prefix('cart')->name('cart.')->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('index');
         Route::post('/add', [CartController::class, 'add'])->name('add');
         Route::patch('/{id}', [CartController::class, 'update'])->name('update');
         Route::delete('/{id}', [CartController::class, 'remove'])->name('remove');
         Route::delete('/', [CartController::class, 'clear'])->name('clear');
+
+        // NEW CART API ROUTES
+        Route::get('/summary', [CartController::class, 'getCartSummary'])->name('summary');
+        Route::get('/items', [CartController::class, 'getCartItems'])->name('items');
     });
 
     // Checkout Routes
@@ -72,10 +77,26 @@ Route::middleware(['auth'])->group(function () {
 
 // ADMIN ROUTES (AUTH + ADMIN MIDDLEWARE)
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Dashboard API for charts
-    Route::get('/dashboard/revenue-data', [DashboardController::class, 'revenueData'])->name('dashboard.revenue-data');
+    // DASHBOARD API ROUTES FOR REAL-TIME DATA - UPDATED
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        // Main revenue data for line charts
+        Route::get('/revenue-data', [DashboardController::class, 'revenueData'])->name('revenue-data');
+
+        // Real-time stats for live updates
+        Route::get('/real-time-stats', [DashboardController::class, 'realTimeStats'])->name('real-time-stats');
+
+        // Order status distribution for bar chart
+        Route::get('/order-status-data', [DashboardController::class, 'orderStatusData'])->name('order-status-data');
+
+        // Real-time sales data (hourly)
+        Route::get('/real-time-sales', [DashboardController::class, 'realTimeSalesData'])->name('real-time-sales');
+
+        // Sales comparison data
+        Route::get('/sales-comparison', [DashboardController::class, 'salesComparison'])->name('sales-comparison');
+    });
 
     // Admin Search Routes
     Route::get('/search', [SearchController::class, 'globalSearch'])->name('search');
@@ -114,6 +135,41 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::patch('/{id}/payment', [AdminOrderController::class, 'updatePaymentStatus'])->name('payment');
         Route::post('/{id}/send-email', [AdminOrderController::class, 'sendEmail'])->name('send-email');
         Route::post('/{id}/send-sms', [AdminOrderController::class, 'sendSms'])->name('send-sms');
+    });
+});
+
+// API ROUTES FOR FRONTEND FUNCTIONALITY
+Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
+    // Search API
+    Route::get('/search/products', function (Request $request) {
+        $query = $request->get('q');
+
+        $products = \App\Models\Product::with('category')
+            ->where('name', 'like', "%{$query}%")
+            ->orWhere('description', 'like', "%{$query}%")
+            ->orWhereHas('category', function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%");
+            })
+            ->take(10)
+            ->get(['id', 'name', 'slug', 'price', 'primary_image'])
+            ->map(function($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'slug' => $product->slug,
+                    'price' => $product->price,
+                    'primary_image' => $product->getDisplayImageUrl(),
+                    'category_name' => $product->category->name
+                ];
+            });
+
+        return response()->json(['products' => $products]);
+    })->name('search.products');
+
+    // Cart API Routes (additional endpoints)
+    Route::prefix('cart')->name('cart.')->group(function () {
+        Route::get('/count', [CartController::class, 'getCartSummary'])->name('count');
+        Route::get('/mini', [CartController::class, 'getCartItems'])->name('mini');
     });
 });
 

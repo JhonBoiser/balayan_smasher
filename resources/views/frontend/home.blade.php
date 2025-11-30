@@ -560,6 +560,12 @@
                         <i class="fas fa-volleyball-ball"></i>
                     @elseif($category->slug == 'tennis')
                         <i class="fas fa-baseball-ball"></i>
+                    @elseif($category->slug == 'chess')
+                        <i class="fas fa-chess"></i>
+                    @elseif($category->slug == 'accessories')
+                        <i class="fas fa-tshirt"></i>
+                    @elseif($category->slug == 'pickleball')
+                        <i class="fas fa-table-tennis-paddle-ball"></i>
                     @else
                         <i class="fas fa-dumbbell"></i>
                     @endif
@@ -649,13 +655,7 @@
                 <p>100% genuine sports equipment guaranteed</p>
             </div>
 
-            <div class="feature-item">
-                <div class="feature-icon">
-                    <i class="fas fa-headset"></i>
-                </div>
-                <h3>Customer Support</h3>
-                <p>Friendly assistance whenever you need help</p>
-            </div>
+            
 
             <div class="feature-item">
                 <div class="feature-icon">

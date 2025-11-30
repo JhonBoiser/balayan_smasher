@@ -546,6 +546,192 @@
         text-decoration: none;
     }
 
+    /* Success Dialog Styles */
+    .success-dialog-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(5px);
+    }
+
+    .success-dialog-overlay.active {
+        display: flex;
+    }
+
+    .success-dialog {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        max-width: 450px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: dialogSlideIn 0.3s ease-out;
+        border: 3px solid #e8f5e8;
+    }
+
+    @keyframes dialogSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        animation: iconBounce 0.6s ease;
+    }
+
+    @keyframes iconBounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-10px);
+        }
+        60% {
+            transform: translateY(-5px);
+        }
+    }
+
+    .success-icon i {
+        font-size: 2.5rem;
+        color: white;
+    }
+
+    .success-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+
+    .success-message {
+        color: #666;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+
+    .success-product-info {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        text-align: left;
+        border: 1px solid #e8ecef;
+    }
+
+    .product-info-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .product-info-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .product-thumbnail {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .product-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-details {
+        flex: 1;
+    }
+
+    .product-name {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
+
+    .product-quantity {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .product-price {
+        font-weight: 700;
+        color: var(--primary-green);
+        font-size: 1.1rem;
+    }
+
+    .success-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .btn-continue-shopping {
+        padding: 12px 24px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+    }
+
+    .btn-continue-shopping:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .btn-view-cart {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-view-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(107, 169, 50, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
     /* Responsive */
     @media (max-width: 992px) {
         .product-detail-layout {
@@ -594,6 +780,20 @@
             border-left-color: var(--primary-green);
             border-bottom-color: #f0f0f0;
         }
+
+        .success-dialog {
+            padding: 20px;
+            margin: 20px;
+        }
+
+        .success-actions {
+            flex-direction: column;
+        }
+
+        .btn-continue-shopping,
+        .btn-view-cart {
+            width: 100%;
+        }
     }
 
     @media (max-width: 576px) {
@@ -616,8 +816,44 @@
         .product-details-tabs {
             padding: 20px;
         }
+
+        .success-icon {
+            width: 60px;
+            height: 60px;
+        }
+
+        .success-icon i {
+            font-size: 2rem;
+        }
+
+        .success-title {
+            font-size: 1.3rem;
+        }
     }
 </style>
+
+<!-- Success Dialog -->
+<div class="success-dialog-overlay" id="successDialog">
+    <div class="success-dialog">
+        <div class="success-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <h3 class="success-title">Item Added to Cart!</h3>
+        <p class="success-message">Your item has been successfully added to your shopping cart.</p>
+
+        <div class="success-product-info" id="dialogProductInfo">
+            <!-- Product info will be populated by JavaScript -->
+        </div>
+
+        <div class="success-actions">
+            <button class="btn-continue-shopping" onclick="closeSuccessDialog()">Continue Shopping</button>
+            <a href="{{ route('cart.index') }}" class="btn-view-cart">
+                <i class="fas fa-shopping-cart"></i>
+                View Cart
+            </a>
+        </div>
+    </div>
+</div>
 
 <!-- Product Detail Section -->
 <section class="product-detail-section">
@@ -658,7 +894,6 @@
             <div class="product-info">
                 <span class="category-badge">{{ $product->category->name }}</span>
                 <h1 class="product-title">{{ $product->name }}</h1>
-
 
                 <div class="price-section">
                     @if($product->isOnSale())
@@ -718,7 +953,7 @@
                 <div class="add-to-cart-section">
                     @auth
                         @if($product->isInStock())
-                        <form action="{{ route('cart.add') }}" method="POST">
+                        <form action="{{ route('cart.add') }}" method="POST" id="addToCartForm">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
 
@@ -731,7 +966,7 @@
                                 </div>
                             </div>
 
-                            <button type="submit" class="btn-add-to-cart">
+                            <button type="submit" class="btn-add-to-cart" id="addToCartBtn">
                                 <i class="fas fa-shopping-cart"></i>
                                 Add to Cart
                             </button>
@@ -761,7 +996,6 @@
             <div class="tab-nav">
                 <button class="tab-link active" onclick="openTab('description')">Description</button>
                 <button class="tab-link" onclick="openTab('specifications')">Specifications</button>
-                <button class="tab-link" onclick="openTab('reviews')">Reviews</button>
             </div>
 
             <div id="description" class="tab-content active">
@@ -780,20 +1014,6 @@
                     <p>No specifications available for this product.</p>
                 </div>
                 @endif
-            </div>
-
-            <div id="reviews" class="tab-content">
-                <div class="product-rating" style="margin-bottom: 20px;">
-                    <div class="stars">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star-half-alt"></i>
-                    </div>
-                    <span class="rating-text">4.5 out of 5 stars (128 reviews)</span>
-                </div>
-                <p>Customer reviews will be displayed here.</p>
             </div>
         </div>
 
@@ -878,6 +1098,132 @@ function openTab(tabName) {
 
     // Add active class to the clicked tab link
     event.currentTarget.classList.add('active');
+}
+
+// Success Dialog Functions
+function showSuccessDialog(productName, productImage, quantity, price) {
+    const dialog = document.getElementById('successDialog');
+    const productInfo = document.getElementById('dialogProductInfo');
+
+    // Populate product info
+    productInfo.innerHTML = `
+        <div class="product-info-row">
+            <div class="product-thumbnail">
+                <img src="${productImage}" alt="${productName}" onerror="this.src='https://via.placeholder.com/100x100?text=No+Image'">
+            </div>
+            <div class="product-details">
+                <div class="product-name">${productName}</div>
+                <div class="product-quantity">Quantity: ${quantity}</div>
+            </div>
+            <div class="product-price">₱${parseFloat(price).toFixed(2)}</div>
+        </div>
+    `;
+
+    // Show dialog
+    dialog.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSuccessDialog() {
+    const dialog = document.getElementById('successDialog');
+    dialog.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+// Close dialog when clicking outside
+document.getElementById('successDialog').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeSuccessDialog();
+    }
+});
+
+// Close dialog on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeSuccessDialog();
+    }
+});
+
+// AJAX form submission for add to cart
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('addToCartForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('addToCartBtn');
+            const originalText = submitBtn.innerHTML;
+
+            // Show loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+            submitBtn.disabled = true;
+
+            // Get form data
+            const formData = new FormData(form);
+
+            // Send AJAX request
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success dialog
+                    showSuccessDialog(
+                        '{{ $product->name }}',
+                        '{{ $product->getDisplayImageUrl() }}',
+                        formData.get('quantity'),
+                        '{{ $product->isOnSale() ? $product->sale_price : $product->price }}'
+                    );
+
+                    // Update cart count in header if exists
+                    updateCartCount(data.cart_count);
+                } else {
+                    // Show error message
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to add item to cart'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while adding item to cart'
+                });
+            })
+            .finally(() => {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    }
+});
+
+// Update cart count in header
+function updateCartCount(count) {
+    const cartBadge = document.querySelector('.cart-badge');
+    if (cartBadge) {
+        cartBadge.textContent = count;
+    } else {
+        // Create cart badge if it doesn't exist
+        const cartLink = document.querySelector('a[href="{{ route("cart.index") }}');
+        if (cartLink && count > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'cart-badge';
+            badge.textContent = count;
+            cartLink.appendChild(badge);
+        }
+    }
 }
 
 // Add image loading error handling

@@ -3,6 +3,11 @@
 
 @section('page-title', 'Products Management')
 
+@section('styles')
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+@endsection
+
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="bi bi-box-seam"></i> Products</h2>
@@ -10,6 +15,20 @@
         <i class="bi bi-plus-circle"></i> Add New Product
     </a>
 </div>
+
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
+
+@if(session('error'))
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
 
 <div class="card shadow-sm">
     <div class="card-body">
@@ -37,7 +56,7 @@
 
                             @if($displayImage)
                                 <img src="{{ asset('storage/' . $displayImage->image_path) }}"
-                                     alt="{{ $product->name }}"
+                                     alt="{{ $displayImage->alt_text ?? $product->name }}"
                                      class="img-thumbnail"
                                      style="width: 60px; height: 60px; object-fit: cover;">
                             @else
@@ -93,11 +112,13 @@
                                 </a>
                                 <form action="{{ route('admin.products.destroy', $product->id) }}"
                                       method="POST"
-                                      class="d-inline"
-                                      onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                      class="d-inline delete-product-form">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                    <button type="submit"
+                                            class="btn btn-outline-danger delete-product-btn"
+                                            title="Delete"
+                                            data-product-name="{{ $product->name }}">
                                         <i class="bi bi-trash"></i> Delete
                                     </button>
                                 </form>
@@ -126,4 +147,61 @@
     </div>
     @endif
 </div>
+@endsection
+
+@section('scripts')
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show success message from backend with SweetAlert
+    @if(session('success'))
+    Swal.fire({
+        title: 'Success!',
+        text: '{{ session('success') }}',
+        icon: 'success',
+        confirmButtonColor: '#28a745',
+        timer: 3000,
+        timerProgressBar: true
+    });
+    @endif
+
+    // Show error message from backend with SweetAlert
+    @if(session('error'))
+    Swal.fire({
+        title: 'Error!',
+        text: '{{ session('error') }}',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+    });
+    @endif
+
+    // Delete product confirmation - keep original form functionality
+    document.querySelectorAll('.delete-product-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const form = this.closest('form');
+            const productName = this.dataset.productName;
+
+            Swal.fire({
+                title: 'Delete Product?',
+                html: `Are you sure you want to delete <strong>"${productName}"</strong>?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Submit the form normally - keep original functionality
+                    form.submit();
+                }
+            });
+        });
+    });
+});
+</script>
 @endsection

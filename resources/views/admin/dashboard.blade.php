@@ -15,6 +15,7 @@
                 <div>
                     <h6 class="text-muted mb-1">Total Orders</h6>
                     <h3 class="mb-0">{{ $totalOrders }}</h3>
+                    <small class="text-muted">Paid & Delivered</small>
                 </div>
             </div>
         </div>
@@ -29,6 +30,7 @@
                 <div>
                     <h6 class="text-muted mb-1">Total Revenue</h6>
                     <h3 class="mb-0">₱{{ number_format($totalRevenue, 2) }}</h3>
+                    <small class="text-muted">Paid & Delivered</small>
                 </div>
             </div>
         </div>
@@ -72,6 +74,7 @@
                     <div>
                         <h6 class="text-muted">Pending Orders</h6>
                         <h2 class="text-danger mb-0">{{ $pendingOrders }}</h2>
+                        <small class="text-muted">Awaiting processing</small>
                     </div>
                     <i class="fas fa-clock text-danger" style="font-size: 2rem;"></i>
                 </div>
@@ -84,7 +87,7 @@
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <div>
                     <h6 class="mb-0">Revenue Overview</h6>
-                    <small class="text-muted">Filter by period</small>
+                    <small class="text-muted">Paid & Delivered Orders Only</small>
                 </div>
                 <div class="btn-group btn-group-sm" role="group" aria-label="Revenue filter" id="revenueFilter">
                     <button type="button" class="btn btn-outline-secondary" data-range="week">Week</button>
@@ -97,8 +100,9 @@
                     <div>
                         <h6 class="text-muted mb-1">Selected Period Revenue</h6>
                         <h3 class="mb-0 text-success" id="selectedRevenue">₱0.00</h3>
+                        <small class="text-muted">Paid & Delivered</small>
                     </div>
-                    <i class="fas fa-chart-bar text-success" style="font-size: 2rem;"></i>
+                    <i class="fas fa-chart-pie text-success" style="font-size: 2rem;"></i>
                 </div>
 
                 <div class="chart-container" style="position: relative; height: 200px;">
@@ -126,6 +130,7 @@
                                 <th>Customer</th>
                                 <th>Total</th>
                                 <th>Status</th>
+                                <th>Payment</th>
                                 <th>Date</th>
                             </tr>
                         </thead>
@@ -144,11 +149,16 @@
                                         {{ ucfirst($order->status) }}
                                     </span>
                                 </td>
+                                <td>
+                                    <span class="badge bg-{{ $order->payment_status === 'paid' ? 'success' : ($order->payment_status === 'pending' ? 'warning' : 'danger') }}">
+                                        {{ ucfirst($order->payment_status) }}
+                                    </span>
+                                </td>
                                 <td>{{ $order->created_at->format('M d, Y') }}</td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">No orders yet</td>
+                                <td colspan="6" class="text-center py-4 text-muted">No orders yet</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -212,61 +222,77 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function createChart(labels, data) {
+    function createLineChart(data) {
         destroyChart();
 
-        // Generate dynamic colors for pie slices
-        function dynamicColor(index) {
-            const hue = (index * 47) % 360;
-            return `hsl(${hue}, 70%, 50%)`;
-        }
-
-        const colors = labels.map((_, i) => dynamicColor(i));
-
-        const chartData = {
-            labels: labels,
-            datasets: [{
-                data: data,
-                backgroundColor: colors,
-                borderColor: '#ffffff',
-                borderWidth: 2,
-                hoverOffset: 8
-            }]
-        };
-
         const config = {
-            type: 'pie',
-            data: chartData,
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: data.datasets
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'bottom',
+                        position: 'top',
                         labels: {
-                            padding: 15,
                             usePointStyle: true,
+                            padding: 15,
                             font: {
                                 size: 11
                             }
                         }
                     },
                     tooltip: {
+                        mode: 'index',
+                        intersect: false,
                         callbacks: {
                             label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += formatCurrency(context.parsed.y);
+                                return label;
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: data.title,
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '₱' + value.toLocaleString();
                             }
                         }
                     }
                 },
-                layout: {
-                    padding: {
-                        top: 10,
-                        bottom: 10
+                interaction: {
+                    intersect: false,
+                    mode: 'nearest'
+                },
+                elements: {
+                    point: {
+                        radius: 3,
+                        hoverRadius: 6
                     }
                 }
             }
@@ -291,20 +317,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const json = await res.json();
 
-            const labels = json.labels || [];
-            const data = json.data || [];
+            document.getElementById('selectedRevenue').textContent = formatCurrency(json.total);
 
-            const total = data.reduce((a, b) => a + (Number(b) || 0), 0);
-            document.getElementById('selectedRevenue').textContent = formatCurrency(total);
-
-            createChart(labels, data);
+            createLineChart(json);
 
         } catch (err) {
             console.error('Failed to fetch revenue data:', err);
             document.getElementById('selectedRevenue').textContent = formatCurrency(0);
 
             // Show error state in chart
-            createChart(['Error'], [1]);
+            createLineChart({
+                labels: ['Error'],
+                datasets: [{
+                    label: 'Error Loading Data',
+                    data: [0],
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    fill: true
+                }],
+                total: 0,
+                title: 'Error Loading Revenue Data'
+            });
         }
     }
 
@@ -326,6 +359,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const activeBtn = document.querySelector('#revenueFilter button.active');
     const initialRange = activeBtn ? activeBtn.dataset.range : 'month';
     fetchRevenue(initialRange);
+
+    // Real-time data refresh (every 30 seconds)
+    setInterval(function() {
+        const currentRange = document.querySelector('#revenueFilter button.active')?.dataset.range || 'month';
+        fetchRevenue(currentRange);
+    }, 30000);
 
     // Handle window resize
     let resizeTimeout;

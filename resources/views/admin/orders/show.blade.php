@@ -1,10 +1,4 @@
-{{-- ========================================== --}}
-{{-- resources/
-
-
-s/admin/orders/show.blade.php --}}
-{{-- FULLY RESPONSIVE WITH REAL-TIME UPDATES --}}
-{{-- ========================================== --}}
+{{-- resources/views/admin/orders/show.blade.php --}}
 @extends('layouts.admin')
 
 @section('page-title', 'Order Details')
@@ -40,19 +34,42 @@ s/admin/orders/show.blade.php --}}
         font-size: 12px;
         color: white;
         z-index: 1;
-        transition: all 0.3s;
+        transition: all 0.5s ease-in-out;
+        transform: scale(1);
     }
     .timeline-marker.active {
         background: #28a745;
-        animation: pulse 2s infinite;
+        animation: pulseActive 2s infinite;
     }
     .timeline-marker.inactive {
         background: #6c757d;
     }
+    .timeline-marker.cancelled {
+        background: #dc3545;
+    }
 
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
+    @keyframes pulseActive {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        50% {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+        }
+    }
+
+    .timeline-item .card {
+        transition: all 0.3s ease-in-out;
+    }
+
+    .timeline-update {
+        animation: highlightCard 1s ease-in-out;
+    }
+
+    @keyframes highlightCard {
+        0% { background-color: rgba(40, 167, 69, 0.1); }
+        100% { background-color: transparent; }
     }
 
     @media print {
@@ -198,7 +215,7 @@ s/admin/orders/show.blade.php --}}
             <div class="card-body">
                 <div class="timeline" id="orderTimeline">
                     <div class="timeline-item">
-                        <div class="timeline-marker {{ in_array($order->status, ['pending', 'processing', 'shipped', 'delivered']) ? 'active' : 'inactive' }}">
+                        <div class="timeline-marker {{ in_array($order->status, ['pending', 'processing', 'shipped', 'delivered']) ? 'active' : ($order->status == 'cancelled' ? 'cancelled' : 'inactive') }}">
                             <i class="bi bi-check"></i>
                         </div>
                         <div class="card">
@@ -210,7 +227,7 @@ s/admin/orders/show.blade.php --}}
                     </div>
 
                     <div class="timeline-item">
-                        <div class="timeline-marker {{ in_array($order->status, ['processing', 'shipped', 'delivered']) ? 'active' : 'inactive' }}">
+                        <div class="timeline-marker {{ in_array($order->status, ['processing', 'shipped', 'delivered']) ? 'active' : ($order->status == 'cancelled' ? 'cancelled' : 'inactive') }}">
                             <i class="bi bi-gear"></i>
                         </div>
                         <div class="card">
@@ -220,6 +237,8 @@ s/admin/orders/show.blade.php --}}
                                     <span id="processingTime">
                                         @if(in_array($order->status, ['processing', 'shipped', 'delivered']))
                                             {{ $order->updated_at->format('M d, Y h:i A') }}
+                                        @elseif($order->status == 'cancelled')
+                                            Cancelled
                                         @else
                                             Pending
                                         @endif
@@ -230,7 +249,7 @@ s/admin/orders/show.blade.php --}}
                     </div>
 
                     <div class="timeline-item">
-                        <div class="timeline-marker {{ in_array($order->status, ['shipped', 'delivered']) ? 'active' : 'inactive' }}">
+                        <div class="timeline-marker {{ in_array($order->status, ['shipped', 'delivered']) ? 'active' : ($order->status == 'cancelled' ? 'cancelled' : 'inactive') }}">
                             <i class="bi bi-truck"></i>
                         </div>
                         <div class="card">
@@ -240,6 +259,8 @@ s/admin/orders/show.blade.php --}}
                                     <span id="shippedTime">
                                         @if(in_array($order->status, ['shipped', 'delivered']))
                                             {{ $order->updated_at->format('M d, Y h:i A') }}
+                                        @elseif($order->status == 'cancelled')
+                                            Cancelled
                                         @else
                                             Pending
                                         @endif
@@ -250,7 +271,7 @@ s/admin/orders/show.blade.php --}}
                     </div>
 
                     <div class="timeline-item">
-                        <div class="timeline-marker {{ $order->status == 'delivered' ? 'active' : 'inactive' }}">
+                        <div class="timeline-marker {{ $order->status == 'delivered' ? 'active' : ($order->status == 'cancelled' ? 'cancelled' : 'inactive') }}">
                             <i class="bi bi-box-seam"></i>
                         </div>
                         <div class="card">
@@ -260,6 +281,8 @@ s/admin/orders/show.blade.php --}}
                                     <span id="deliveredTime">
                                         @if($order->status == 'delivered')
                                             {{ $order->updated_at->format('M d, Y h:i A') }}
+                                        @elseif($order->status == 'cancelled')
+                                            Cancelled
                                         @else
                                             Pending
                                         @endif
@@ -294,10 +317,17 @@ s/admin/orders/show.blade.php --}}
                             <tr class="product-mobile">
                                 <td>
                                     @if($item->product && $item->product->primaryImage)
-                                        <img src="{{ asset('storage/' . $item->product->primaryImage->image_path) }}"
+                                        <img src="{{ $item->product->getImageUrl($item->product->primaryImage->image_path) }}"
                                              alt="{{ $item->product_name }}"
                                              class="img-thumbnail"
-                                             style="width: 60px; height: 60px; object-fit: cover;">
+                                             style="width: 60px; height: 60px; object-fit: cover;"
+                                             onerror="this.src='https://via.placeholder.com/60?text=No+Image'">
+                                    @elseif($item->product)
+                                        <img src="{{ $item->product->getDisplayImageUrl() }}"
+                                             alt="{{ $item->product_name }}"
+                                             class="img-thumbnail"
+                                             style="width: 60px; height: 60px; object-fit: cover;"
+                                             onerror="this.src='https://via.placeholder.com/60?text=No+Image'">
                                     @else
                                         <div class="bg-light d-flex align-items-center justify-content-center"
                                              style="width: 60px; height: 60px;">
@@ -430,77 +460,92 @@ s/admin/orders/show.blade.php --}}
         </div>
 
         <!-- Order Status -->
-        <div class="card shadow-sm mb-4 no-print">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-flag"></i> Update Status</h5>
+<div class="card shadow-sm mb-4 no-print">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-flag"></i> Update Status</h5>
+    </div>
+    <div class="card-body">
+        <form id="statusUpdateForm">
+            @csrf
+            <input type="hidden" name="_method" value="PATCH">
+            <div class="mb-3">
+                <label class="form-label">Current Status</label>
+                <select name="status" id="statusSelect" class="form-select form-select-lg">
+                    <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>📋 Pending</option>
+                    <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>⚙️ Processing</option>
+                    <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}>🚚 Shipped</option>
+                    <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>✅ Delivered</option>
+                    <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>❌ Cancelled</option>
+                </select>
+                <small class="text-muted">Customer will be notified via email</small>
             </div>
-            <div class="card-body">
-                <form id="statusUpdateForm">
-                    @csrf
-                    @method('PATCH')
-                    <div class="mb-3">
-                        <label class="form-label">Current Status</label>
-                        <select name="status" id="statusSelect" class="form-select form-select-lg">
-                            <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>📋 Pending</option>
-                            <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>⚙️ Processing</option>
-                            <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}>🚚 Shipped</option>
-                            <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>✅ Delivered</option>
-                            <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>❌ Cancelled</option>
-                        </select>
-                        <small class="text-muted">Customer will be notified</small>
-                    </div>
 
+            <button type="submit" class="btn btn-primary w-100" id="statusUpdateBtn">
+                <i class="bi bi-check-circle"></i> Update Status & Notify Customer
+            </button>
+        </form>
+    </div>
+</div>
 
-                    <button type="submit" class="btn btn-primary w-100" id="statusUpdateBtn">
-                        <i class="bi bi-check-circle"></i> Update & Notify
-                    </button>
-                </form>
+       <!-- Payment Information -->
+<div class="card shadow-sm mb-4 no-print">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-credit-card"></i> Payment</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-sm table-borderless mb-3">
+            <tr>
+                <td class="text-muted">Method:</td>
+                <td class="text-end">
+                    <span class="badge bg-info" id="paymentMethod">
+                        {{ ucfirst(str_replace('_', ' ', $order->payment_method)) }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-muted">Status:</td>
+                <td class="text-end">
+                    <span class="badge" id="paymentStatusBadge"
+                        @if($order->payment_status == 'paid')
+                            style="background-color: #28a745;"
+                        @elseif($order->payment_status == 'failed')
+                            style="background-color: #dc3545;"
+                        @else
+                            style="background-color: #ffc107;"
+                        @endif
+                    >
+                        @if($order->payment_status == 'paid')
+                            ✅ Paid
+                        @elseif($order->payment_status == 'failed')
+                            ❌ Failed
+                        @elseif($order->payment_status == 'refunded')
+                            🔄 Refunded
+                        @else
+                            ⏳ Pending
+                        @endif
+                    </span>
+                </td>
+            </tr>
+        </table>
+
+        <form id="paymentUpdateForm">
+            @csrf
+            <input type="hidden" name="_method" value="PATCH">
+            <div class="mb-3">
+                <label class="form-label">Update Payment Status</label>
+                <select name="payment_status" id="paymentStatusSelect" class="form-select">
+                    <option value="pending" {{ $order->payment_status == 'pending' ? 'selected' : '' }}>⏳ Pending</option>
+                    <option value="paid" {{ $order->payment_status == 'paid' ? 'selected' : '' }}>✅ Paid</option>
+                    <option value="failed" {{ $order->payment_status == 'failed' ? 'selected' : '' }}>❌ Failed</option>
+                    <option value="refunded" {{ $order->payment_status == 'refunded' ? 'selected' : '' }}>🔄 Refunded</option>
+                </select>
             </div>
-        </div>
-
-        <!-- Payment Information -->
-        <div class="card shadow-sm mb-4 no-print">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-credit-card"></i> Payment</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-sm table-borderless mb-3">
-                    <tr>
-                        <td class="text-muted">Method:</td>
-                        <td class="text-end">
-                            <span class="badge bg-info" id="paymentMethod">
-                                {{ ucfirst(str_replace('_', ' ', $order->payment_method)) }}
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted">Status:</td>
-                        <td class="text-end">
-                            <span class="badge" id="paymentStatusBadge">
-                                {{ ucfirst($order->payment_status) }}
-                            </span>
-                        </td>
-                    </tr>
-                </table>
-
-                <form id="paymentUpdateForm">
-                    @csrf
-                    @method('PATCH')
-                    <div class="mb-3">
-                        <label class="form-label">Update Payment</label>
-                        <select name="payment_status" id="paymentStatusSelect" class="form-select">
-                            <option value="pending" {{ $order->payment_status == 'pending' ? 'selected' : '' }}>⏳ Pending</option>
-                            <option value="paid" {{ $order->payment_status == 'paid' ? 'selected' : '' }}>✅ Paid</option>
-                            <option value="failed" {{ $order->payment_status == 'failed' ? 'selected' : '' }}>❌ Failed</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-success w-100" id="paymentUpdateBtn">
-                        <i class="bi bi-cash-coin"></i> Update Payment
-                    </button>
-                </form>
-            </div>
-        </div>
-
+            <button type="submit" class="btn btn-success w-100" id="paymentUpdateBtn">
+                <i class="bi bi-cash-coin"></i> Update Payment Status
+            </button>
+        </form>
+    </div>
+</div>
         <!-- Order Summary -->
         <div class="card shadow-sm">
             <div class="card-header bg-white">
@@ -551,9 +596,7 @@ s/admin/orders/show.blade.php --}}
         <button class="btn btn-primary flex-fill" data-bs-toggle="modal" data-bs-target="#emailModal">
             <i class="bi bi-envelope"></i> Email
         </button>
-        <button class="btn btn-success flex-fill" data-bs-toggle="modal" data-bs-target="#smsModal">
-            <i class="bi bi-phone"></i> SMS
-        </button>
+       
         <button class="btn btn-info flex-fill" onclick="window.print()">
             <i class="bi bi-printer"></i> Print
         </button>
@@ -569,26 +612,27 @@ s/admin/orders/show.blade.php --}}
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Remove the form wrapper and use direct inputs -->
-                <div class="mb-3">
-                    <label class="form-label">To</label>
-                    <input type="text" class="form-control" value="{{ $order->user->email }}" readonly>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Subject <span class="text-danger">*</span></label>
-                    <input type="text" id="emailSubject" class="form-control" value="Update on Order #{{ $order->order_number }}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Message <span class="text-danger">*</span></label>
-                    <textarea id="emailMessage" class="form-control" rows="5" required placeholder="Enter your message to the customer..."></textarea>
-                </div>
-                <div class="alert alert-info mb-3">
-                    <small><i class="bi bi-info-circle"></i> Email will be sent from {{ config('mail.from.address') }}</small>
-                </div>
-                <!-- Change to type="button" and add onclick handler -->
-                <button type="button" class="btn btn-primary w-100" id="sendEmailBtn" onclick="sendCustomEmail()">
-                    <i class="bi bi-send"></i> Send Email
-                </button>
+                <form id="emailForm">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label">To</label>
+                        <input type="text" id="emailRecipient" class="form-control" value="{{ $order->user->email }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject <span class="text-danger">*</span></label>
+                        <input type="text" id="emailSubject" class="form-control" value="Update on Order #{{ $order->order_number }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message <span class="text-danger">*</span></label>
+                        <textarea id="emailMessage" class="form-control" rows="5" required placeholder="Enter your message to the customer..."></textarea>
+                    </div>
+                    <div class="alert alert-info mb-3">
+                        <small><i class="bi bi-info-circle"></i> Email will be sent from {{ config('mail.from.address') }}</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="sendEmailBtn">
+                        <i class="bi bi-send"></i> Send Email
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -603,10 +647,9 @@ s/admin/orders/show.blade.php --}}
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Remove the form wrapper and use direct inputs -->
                 <div class="mb-3">
                     <label class="form-label">Phone Number</label>
-                    <input type="text" class="form-control" value="{{ $order->shipping_phone }}" readonly>
+                    <input type="text" id="smsRecipient" class="form-control" value="{{ $order->shipping_phone }}" readonly>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Message <span class="text-danger">*</span></label>
@@ -616,7 +659,6 @@ s/admin/orders/show.blade.php --}}
                 <div class="alert alert-info mb-3">
                     <small><i class="bi bi-info-circle"></i> SMS will be prefixed with "Balayan Smashers Hub:" and order number</small>
                 </div>
-                <!-- Change to type="button" and add onclick handler -->
                 <button type="button" class="btn btn-success w-100" id="sendSmsBtn" onclick="sendCustomSms()">
                     <i class="bi bi-phone"></i> Send SMS
                 </button>
@@ -627,6 +669,9 @@ s/admin/orders/show.blade.php --}}
 @endsection
 
 @section('scripts')
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 // ===========================================
 // REAL-TIME DATA INTEGRATION
@@ -635,7 +680,7 @@ const orderId = {{ $order->id }};
 let lastUpdateTime = '{{ $order->updated_at }}';
 const updateInterval = 30000;
 
-// Route URLs using Laravel helpers - FIXED
+// Route URLs using Laravel helpers
 const routes = {
     sendEmail: '{{ route("admin.orders.send-email", $order->id) }}',
     sendSms: '{{ route("admin.orders.send-sms", $order->id) }}',
@@ -644,7 +689,7 @@ const routes = {
     updatePayment: '{{ route("admin.orders.payment", $order->id) }}'
 };
 
-console.log('Routes initialized:', routes);
+console.log('✅ Real-time Order Timeline initialized. Auto-refresh every 30 seconds.');
 
 // Check for updates periodically
 setInterval(checkForUpdates, updateInterval);
@@ -661,14 +706,48 @@ async function checkForUpdates() {
 
         if (response.ok) {
             const data = await response.json();
-            if (data.updated && data.updated_at !== lastUpdateTime) {
-                showUpdateAlert('Order has been updated. Refreshing data...');
-                lastUpdateTime = data.updated_at;
-                updateOrderDisplay(data.order);
+
+            // Check if order status has changed
+            if (data.order && data.order.status) {
+                const currentStatus = document.getElementById('statusSelect').value;
+
+                if (data.order.status !== currentStatus) {
+                    console.log('✅ Order updated! Status changed to:', data.order.status);
+                    showUpdateAlert(`✅ Order status changed to: <strong>${data.order.status.toUpperCase()}</strong>`);
+
+                    // Update the timeline
+                    updateTimeline(data.order.status, data.updated_at);
+
+                    // Update status select
+                    document.getElementById('statusSelect').value = data.order.status;
+
+                    // Update last updated time
+                    document.getElementById('lastUpdated').textContent = 'Just now';
+                    document.getElementById('summaryUpdated').textContent = 'Just now';
+
+                    lastUpdateTime = data.updated_at;
+                }
+
+                // Update payment status if changed
+                if (data.order.payment_status) {
+                    const currentPaymentStatus = document.getElementById('paymentStatusSelect').value;
+                    if (data.order.payment_status !== currentPaymentStatus) {
+                        console.log('💳 Payment status changed to:', data.order.payment_status);
+                        showUpdateAlert(`💳 Payment status changed to: <strong>${data.order.payment_status.toUpperCase()}</strong>`);
+
+                        // Update payment select and badge
+                        document.getElementById('paymentStatusSelect').value = data.order.payment_status;
+                        const badge = document.getElementById('paymentStatusBadge');
+                        const statusClass = data.order.payment_status === 'paid' ? 'success' :
+                                          (data.order.payment_status === 'failed' ? 'danger' : 'warning');
+                        badge.className = `badge bg-${statusClass}`;
+                        badge.textContent = data.order.payment_status.charAt(0).toUpperCase() + data.order.payment_status.slice(1);
+                    }
+                }
             }
         }
     } catch (error) {
-        console.error('Update check failed:', error);
+        console.error('❌ Update check failed:', error);
     }
 }
 
@@ -701,41 +780,60 @@ function updateOrderDisplay(order) {
     });
 }
 
+// ===========================================
+// IMPROVED TIMELINE UPDATE FUNCTION
+// ===========================================
 function updateTimeline(status, updatedAt = null) {
-    const statusOrder = ['pending', 'processing', 'shipped', 'delivered'];
+    const statusOrder = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
     const currentIndex = statusOrder.indexOf(status);
     const now = updatedAt ? new Date(updatedAt) : new Date();
     const formattedTime = formatDateTime(now);
 
     console.log('Updating timeline for status:', status, 'currentIndex:', currentIndex);
 
-    // Update timeline markers
-    document.querySelectorAll('.timeline-item').forEach((item, index) => {
+    // Get all timeline items
+    const timelineItems = document.querySelectorAll('.timeline-item');
+
+    timelineItems.forEach((item, index) => {
         const marker = item.querySelector('.timeline-marker');
         const timeElement = item.querySelector('.text-muted span');
 
         if (marker) {
-            if (index <= currentIndex) {
-                marker.classList.remove('inactive');
-                marker.classList.add('active');
+            // Reset all markers first
+            marker.className = 'timeline-marker';
 
-                // Update timestamp for completed steps
-                if (timeElement && index <= currentIndex) {
-                    if (index === currentIndex) {
-                        // Current step - use the actual update time
-                        timeElement.textContent = formattedTime;
-                    } else if (index < currentIndex) {
-                        // Previous steps - mark as completed
-                        timeElement.textContent = 'Completed';
-                    }
+            if (status === 'cancelled') {
+                // Special handling for cancelled status
+                if (index === 0) {
+                    // Only the first item (Order Placed) should be active for cancelled orders
+                    marker.classList.add('cancelled');
+                    if (timeElement) timeElement.textContent = 'Order was cancelled';
+                } else {
+                    marker.classList.add('inactive');
+                    if (timeElement) timeElement.textContent = 'Cancelled';
                 }
             } else {
-                marker.classList.remove('active');
-                marker.classList.add('inactive');
+                // Normal status flow
+                if (index <= currentIndex) {
+                    marker.classList.add('active');
 
-                // Reset future steps to pending
-                if (timeElement) {
-                    timeElement.textContent = 'Pending';
+                    // Update timestamp for completed and current steps
+                    if (timeElement) {
+                        if (index === currentIndex) {
+                            // Current step - use the actual update time
+                            timeElement.textContent = formattedTime;
+                        } else if (index < currentIndex) {
+                            // Previous steps - mark as completed
+                            timeElement.textContent = 'Completed';
+                        }
+                    }
+                } else {
+                    marker.classList.add('inactive');
+
+                    // Reset future steps to pending
+                    if (timeElement) {
+                        timeElement.textContent = 'Pending';
+                    }
                 }
             }
         }
@@ -745,6 +843,9 @@ function updateTimeline(status, updatedAt = null) {
     updateStatusTimestamp(status, formattedTime);
 }
 
+// ===========================================
+// UPDATE SPECIFIC STATUS TIMESTAMPS
+// ===========================================
 function updateStatusTimestamp(status, timestamp) {
     const statusMap = {
         'processing': 'processingTime',
@@ -758,8 +859,22 @@ function updateStatusTimestamp(status, timestamp) {
             element.textContent = timestamp;
         }
     }
+
+    // Special handling for cancelled status
+    if (status === 'cancelled') {
+        const processingTime = document.getElementById('processingTime');
+        const shippedTime = document.getElementById('shippedTime');
+        const deliveredTime = document.getElementById('deliveredTime');
+
+        if (processingTime) processingTime.textContent = 'Cancelled';
+        if (shippedTime) shippedTime.textContent = 'Cancelled';
+        if (deliveredTime) deliveredTime.textContent = 'Cancelled';
+    }
 }
 
+// ===========================================
+// IMPROVED DATE/TIME FORMATTER
+// ===========================================
 function formatDateTime(date) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const month = months[date.getMonth()];
@@ -775,172 +890,94 @@ function formatDateTime(date) {
     return `${month} ${day}, ${year} ${hours}:${minutes} ${ampm}`;
 }
 
-function showUpdateAlert(message) {
+function showUpdateAlert(message, duration = 5000) {
     const alert = document.getElementById('realtimeAlert');
     const alertMessage = document.getElementById('alertMessage');
 
     alert.classList.remove('d-none');
-    alertMessage.textContent = message;
+    alertMessage.innerHTML = message; // Use innerHTML for HTML content
 
+    // Auto-hide after duration
     setTimeout(() => {
         alert.classList.add('d-none');
-    }, 3000);
+    }, duration);
 }
 
 // ===========================================
-// STATUS UPDATE FORM - AJAX SUBMISSION (FIXED)
+// HELPER FUNCTIONS
 // ===========================================
-document.getElementById('statusUpdateForm').addEventListener('submit', async function(e) {
+// HTML escape helper to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ===========================================
+// CUSTOM EMAIL SEND FUNCTION - SWEETALERT VERSION
+// ===========================================
+document.getElementById('emailForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-
-    const btn = document.getElementById('statusUpdateBtn');
-    const originalText = btn.innerHTML;
-    const statusSelect = document.getElementById('statusSelect');
-    const selectedOption = statusSelect.options[statusSelect.selectedIndex];
-    const newStatus = selectedOption.text;
-    const newStatusValue = statusSelect.value;
-
-    if (!confirm(`Change order status to ${newStatus}? Customer will be notified via email and SMS.`)) {
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading-spinner"></span> Updating...';
-
-    try {
-        const formData = new FormData(this);
-
-        const response = await fetch(routes.updateStatus, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            showUpdateAlert('✅ Order status updated successfully! Customer notified.');
-
-            // Update the timeline immediately with the new status
-            updateTimeline(newStatusValue);
-
-            // Update last updated time
-            const now = new Date();
-            document.getElementById('lastUpdated').textContent = 'Just now';
-            document.getElementById('summaryUpdated').textContent = 'Just now';
-
-            // Show/hide tracking number field based on status
-            const trackingField = document.getElementById('trackingNumberField');
-            if (['pending', 'processing'].includes(newStatusValue)) {
-                trackingField.style.display = 'block';
-            } else {
-                trackingField.style.display = 'none';
-            }
-
-            // Update the order object in our real-time system
-            if (data.order) {
-                lastUpdateTime = data.order.updated_at;
-            }
-
-        } else {
-            showDialog('Error', 'Error: ' + (data.message || 'Failed to update status'), 'error');
-        }
-    } catch (error) {
-        console.error('Status update error:', error);
-       showDialog('✅ Order status updated successfully! Customer notified.');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
+    await sendCustomEmail();
 });
 
-// ===========================================
-// PAYMENT UPDATE FORM - AJAX SUBMISSION
-// ===========================================
-document.getElementById('paymentUpdateForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const btn = document.getElementById('paymentUpdateBtn');
-    const originalText = btn.innerHTML;
-    const paymentSelect = document.getElementById('paymentStatusSelect');
-    const selectedOption = paymentSelect.options[paymentSelect.selectedIndex];
-    const newStatus = selectedOption.text;
-
-    if (!confirm(`Change payment status to ${newStatus}?`)) {
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading-spinner"></span> Updating...';
-
-    try {
-        const formData = new FormData(this);
-
-        const response = await fetch(routes.updatePayment, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            showUpdateAlert('✅ Payment status updated successfully!');
-
-            // Update payment badge
-            const badge = document.getElementById('paymentStatusBadge');
-            const status = formData.get('payment_status');
-            badge.className = `badge bg-${status === 'paid' ? 'success' : (status === 'failed' ? 'danger' : 'warning')}`;
-            badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-
-            // Update last updated time
-            document.getElementById('lastUpdated').textContent = 'Just now';
-            document.getElementById('summaryUpdated').textContent = 'Just now';
-
-        } else {
-            showDialog('Error', 'Error: ' + (data.message || 'Failed to update payment status'), 'error');
-        }
-    } catch (error) {
-        console.error('Payment update error:', error);
-        showDialog('✅ Payment status updated successfully!');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
-});
-
-// ===========================================
-// CUSTOM EMAIL SEND FUNCTION
-// ===========================================
 async function sendCustomEmail() {
     const btn = document.getElementById('sendEmailBtn');
     const originalText = btn.innerHTML;
-    const subject = document.getElementById('emailSubject').value;
-    const message = document.getElementById('emailMessage').value;
+    const subject = document.getElementById('emailSubject').value.trim();
+    const message = document.getElementById('emailMessage').value.trim();
 
-    // Validate inputs
-    if (!subject.trim()) {
-        showDialog('Validation Error', 'Please enter an email subject', 'error');
+    // Basic validation
+    if (!subject) {
+        await Swal.fire({
+            title: 'Missing Subject',
+            text: 'Please enter an email subject',
+            icon: 'warning',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#6ba932'
+        });
+        document.getElementById('emailSubject').focus();
         return;
     }
 
-    if (!message.trim()) {
-        showDialog('Validation Error', 'Please enter an email message', 'error');
+    if (!message) {
+        await Swal.fire({
+            title: 'Missing Message',
+            text: 'Please enter an email message',
+            icon: 'warning',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#6ba932'
+        });
+        document.getElementById('emailMessage').focus();
         return;
     }
 
-    if (!confirm('Send this email to the customer?')) {
+    // Show confirmation dialog
+    const confirmResult = await Swal.fire({
+        title: 'Send Email?',
+        html: `
+            <div class="text-start">
+                <p><strong>To:</strong> {{ $order->user->email }}</p>
+                <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
+                <p><strong>Message Preview:</strong></p>
+                <div class="bg-light p-2 rounded" style="max-height: 120px; overflow-y: auto; font-size: 0.9rem;">
+                    ${escapeHtml(message.substring(0, 200))}${message.length > 200 ? '...' : ''}
+                </div>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Send Email',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d'
+    });
+
+    if (!confirmResult.isConfirmed) {
         return;
     }
 
+    // Update button state
     btn.disabled = true;
     btn.innerHTML = '<span class="loading-spinner"></span> Sending...';
 
@@ -951,6 +988,132 @@ async function sendCustomEmail() {
         formData.append('message', message);
 
         const response = await fetch(routes.sendEmail, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Success SweetAlert
+            await Swal.fire({
+                title: 'Email Sent!',
+                html: `
+                    <div class="text-start">
+                        <p><i class="bi bi-envelope-check text-success"></i> <strong>Email sent successfully!</strong></p>
+                        <p><strong>To:</strong> {{ $order->user->email }}</p>
+                        <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
+                        <p class="text-muted small">${new Date().toLocaleString()}</p>
+                    </div>
+                `,
+                icon: 'success',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#6ba932',
+                timer: 5000,
+                timerProgressBar: true
+            });
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
+            modal.hide();
+
+            // Reset form
+            document.getElementById('emailMessage').value = '';
+
+        } else {
+            throw new Error(data.message || 'Failed to send email');
+        }
+    } catch (error) {
+        console.error('Email sending error:', error);
+
+        await Swal.fire({
+            title: 'Error Sending Email',
+            text: error.message || 'An unexpected error occurred while sending the email. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545'
+        });
+    } finally {
+        // Restore button
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+// ===========================================
+// CUSTOM SMS SEND FUNCTION - SWEETALERT VERSION
+// ===========================================
+async function sendCustomSms() {
+    const btn = document.getElementById('sendSmsBtn');
+    const originalHtml = btn.innerHTML;
+    const message = document.getElementById('smsMessage').value.trim();
+
+    // Validate inputs
+    if (!message) {
+        await Swal.fire({
+            title: 'Missing Message',
+            text: 'Please enter an SMS message',
+            icon: 'warning',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#6ba932'
+        });
+        return;
+    }
+
+    if (message.length > 160) {
+        await Swal.fire({
+            title: 'Message Too Long',
+            text: 'SMS message cannot exceed 160 characters',
+            icon: 'warning',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#6ba932'
+        });
+        return;
+    }
+
+    // Get recipient phone from the input field
+    const recipientPhoneInput = document.getElementById('smsRecipient');
+    const recipientPhone = recipientPhoneInput ? recipientPhoneInput.value : '{{ $order->shipping_phone }}';
+
+    // Show confirmation dialog
+    const confirmResult = await Swal.fire({
+        title: 'Send SMS?',
+        html: `
+            <div class="text-start">
+                <p><strong>To:</strong> ${escapeHtml(recipientPhone)}</p>
+                <p><strong>Message:</strong></p>
+                <p class="bg-light p-2 rounded" style="max-height: 100px; overflow-y: auto;">${escapeHtml(message)}</p>
+                <p class="text-muted small">Characters: ${message.length}/160</p>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Send SMS',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#6ba932',
+        cancelButtonColor: '#6c757d'
+    });
+
+    if (!confirmResult.isConfirmed) {
+        return;
+    }
+
+    // Update button state before sending
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span> Sending...';
+
+    try {
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        formData.append('message', message);
+
+        console.log('📱 Sending SMS with:', { phone: recipientPhone, message_length: message.length });
+
+        const response = await fetch(routes.sendSms, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -967,96 +1130,92 @@ async function sendCustomEmail() {
             data = await response.json();
         } else {
             const text = await response.text();
-            console.log('Non-JSON response:', text);
-            data = { success: true, message: 'Email sent successfully' };
+            console.warn('⚠️ Non-JSON SMS response:', text);
+            if (response.ok) {
+                data = { success: true, message: 'SMS sent successfully' };
+            } else {
+                throw new Error(`Server error: ${response.status} - ${text}`);
+            }
         }
 
-        if (data.success) {
-            showUpdateAlert('✅ Email sent successfully to {{ $order->user->email }}');
+        if (data.success || response.ok) {
+            console.log('✅ SMS sent successfully!');
 
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
-            if (modal) {
-                modal.hide();
+            // Get current timestamp
+            const now = new Date();
+            const timestamp = now.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            // Show SweetAlert2 success dialog
+            await Swal.fire({
+                title: 'SMS Sent!',
+                html: `
+                    <div class="text-start">
+                        <p><i class="bi bi-telephone-check text-success"></i> <strong>SMS sent successfully!</strong></p>
+                        <p><strong>To:</strong> ${escapeHtml(recipientPhone)}</p>
+                        <p class="text-muted small">${timestamp}</p>
+                    </div>
+                `,
+                icon: 'success',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#6ba932',
+                timer: 5000,
+                timerProgressBar: true
+            });
+
+            // Close modal AFTER success dialog confirmed
+            const modalElement = document.getElementById('smsModal');
+            if (modalElement) {
+                try {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    } else {
+                        // Force close if modal doesn't exist
+                        modalElement.classList.remove('show');
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) {
+                            backdrop.remove();
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Could not close modal:', e);
+                }
             }
 
-            // Reset form
-            document.getElementById('emailSubject').value = 'Update on Order #{{ $order->order_number }}';
-            document.getElementById('emailMessage').value = '';
+            // Reset form completely
+            const messageInput = document.getElementById('smsMessage');
+            if (messageInput) {
+                messageInput.value = '';
+                // Trigger input event to update character counter
+                messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
         } else {
-            showDialog('Error', 'Error: ' + (data.message || 'Failed to send email'), 'error');
+            const errorMsg = data.message || data.error || 'Failed to send SMS. Please try again.';
+            throw new Error(errorMsg);
         }
     } catch (error) {
-        console.error('Email send error:', error);
-        showDialog('Error', 'Failed to send email. Please try again.', 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
-}
+        console.error('❌ SMS sending error:', error.message);
 
-// ===========================================
-// CUSTOM SMS SEND FUNCTION
-// ===========================================
-async function sendCustomSms() {
-    const btn = document.getElementById('sendSmsBtn');
-    const originalText = btn.innerHTML;
-    const message = document.getElementById('smsMessage').value;
-
-    // Validate inputs
-    if (!message.trim()) {
-        showDialog('Validation Error', 'Please enter an SMS message', 'error');
-        return;
-    }
-
-    if (message.length > 160) {
-        showDialog('Validation Error', 'SMS message cannot exceed 160 characters', 'error');
-        return;
-    }
-
-    if (!confirm('Send this SMS to the customer?')) {
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading-spinner"></span> Sending...';
-
-    try {
-        const formData = new FormData();
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-        formData.append('message', message);
-
-        const response = await fetch(routes.sendSms, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
+        // Show SweetAlert2 error dialog
+        await Swal.fire({
+            title: 'Error Sending SMS',
+            text: error.message || 'An unexpected error occurred while sending the SMS. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545'
         });
-
-        const data = await response.json();
-
-        if (data.success) {
-            showUpdateAlert('✅ SMS sent successfully to {{ $order->shipping_phone }}');
-
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('smsModal'));
-            modal.hide();
-
-            // Reset form
-            document.getElementById('smsMessage').value = '';
-            document.getElementById('charCounter').textContent = '0/160 characters';
-        } else {
-            showDialog('Error', 'Error: ' + (data.message || 'Failed to send SMS'), 'error');
-        }
-    } catch (error) {
-        console.error('SMS send error:', error);
-        showDialog('Error', 'Failed to send SMS. Please try again.', 'error');
     } finally {
+        // Restore button to original state
         btn.disabled = false;
-        btn.innerHTML = originalText;
+        btn.innerHTML = originalHtml;
     }
 }
 
@@ -1086,16 +1245,324 @@ if (smsTextarea && charCounter) {
 }
 
 // ===========================================
-// SHOW/HIDE TRACKING NUMBER FIELD
+// STATUS UPDATE FORM - SWEETALERT VERSION
 // ===========================================
-document.getElementById('statusSelect').addEventListener('change', function() {
-    const trackingField = document.getElementById('trackingNumberField');
-    if (['pending', 'processing'].includes(this.value)) {
-        trackingField.style.display = 'block';
-    } else {
-        trackingField.style.display = 'none';
+document.getElementById('statusUpdateForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const form = this;
+    const btn = document.getElementById('statusUpdateBtn');
+    const originalText = btn.innerHTML;
+    const statusSelect = document.getElementById('statusSelect');
+    const newStatus = statusSelect.value;
+    const newStatusText = statusSelect.options[statusSelect.selectedIndex].text;
+
+    // Get current status for comparison
+    const currentStatus = '{{ $order->status }}';
+
+    // Don't proceed if status hasn't changed
+    if (newStatus === currentStatus) {
+        await Swal.fire({
+            title: 'No Change',
+            text: `Status is already set to ${newStatusText}. No changes made.`,
+            icon: 'info',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#6ba932'
+        });
+        return;
+    }
+
+    // Status labels for display
+    const statusLabels = {
+        'pending': '📋 Pending',
+        'processing': '⚙️ Processing',
+        'shipped': '🚚 Shipped',
+        'delivered': '✅ Delivered',
+        'cancelled': '❌ Cancelled'
+    };
+
+    // Confirmation dialog with SweetAlert
+    const confirmResult = await Swal.fire({
+        title: 'Update Order Status?',
+        html: `
+            <div class="text-start">
+                <p><strong>Order #{{ $order->order_number }}</strong></p>
+                <p>Current Status: <span class="badge bg-secondary">${statusLabels[currentStatus]}</span></p>
+                <p>New Status: <span class="badge bg-primary">${statusLabels[newStatus]}</span></p>
+                <p class="text-muted small mt-2">Customer will be notified via email and SMS.</p>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Update Status',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d'
+    });
+
+    if (!confirmResult.isConfirmed) {
+        return;
+    }
+
+    // Update button state
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span> Updating...';
+
+    try {
+        // Create FormData from the form
+        const formData = new FormData(form);
+
+        const response = await fetch('{{ route("admin.orders.status", $order->id) }}', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        }
+
+        if (data.success) {
+            // Success handling with SweetAlert
+            await Swal.fire({
+                title: 'Status Updated!',
+                html: `
+                    <div class="text-start">
+                        <p><i class="bi bi-check-circle text-success"></i> <strong>Order status updated successfully!</strong></p>
+                        <p>Order #{{ $order->order_number }} status changed to:</p>
+                        <p><span class="badge bg-success" style="font-size: 1rem; padding: 0.5rem 1rem;">${statusLabels[newStatus]}</span></p>
+                        <p class="text-muted small mt-2">Customer has been notified via email and SMS.</p>
+                    </div>
+                `,
+                icon: 'success',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#6ba932',
+                timer: 5000,
+                timerProgressBar: true
+            });
+
+            // Update the timeline immediately
+            updateTimeline(newStatus);
+
+            // Update last updated time
+            const now = new Date();
+            document.getElementById('lastUpdated').textContent = 'Just now';
+            document.getElementById('summaryUpdated').textContent = 'Just now';
+
+            // Add visual feedback
+            document.querySelectorAll('.timeline-item').forEach(item => {
+                item.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                setTimeout(() => item.style.backgroundColor = '', 1000);
+            });
+
+        } else {
+            throw new Error(data.message || 'Unknown error occurred');
+        }
+
+    } catch (error) {
+        console.error('❌ Status update failed:', error);
+
+        // Show user-friendly error message with SweetAlert
+        let errorMessage = 'Failed to update status. ';
+
+        if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            errorMessage += 'Please check your internet connection and try again.';
+        } else if (error.message.includes('500')) {
+            errorMessage += 'Server error. Please try again later.';
+        } else {
+            errorMessage += error.message;
+        }
+
+        await Swal.fire({
+            title: 'Update Failed',
+            text: errorMessage,
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545'
+        });
+
+        // Revert select to previous value on error
+        statusSelect.value = currentStatus;
+
+    } finally {
+        // Always restore button state
+        btn.disabled = false;
+        btn.innerHTML = originalText;
     }
 });
+
+// ===========================================
+// PAYMENT STATUS UPDATE FORM - SWEETALERT VERSION
+// ===========================================
+const paymentForm = document.getElementById('paymentUpdateForm');
+const paymentStatusSelect = document.getElementById('paymentStatusSelect');
+const paymentStatusBadge = document.getElementById('paymentStatusBadge');
+const paymentUpdateBtn = document.getElementById('paymentUpdateBtn');
+
+if (paymentForm) {
+    paymentForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Get form values
+        const newPaymentStatus = paymentStatusSelect.value;
+        const currentPaymentStatus = '{{ $order->payment_status }}';
+
+        // Prevent submission if status hasn't changed
+        if (newPaymentStatus === currentPaymentStatus) {
+            await Swal.fire({
+                title: 'No Change',
+                text: 'Payment status is already set to this value.',
+                icon: 'info',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#6ba932'
+            });
+            return;
+        }
+
+        // Get status labels for confirmation dialog
+        const statusLabels = {
+            'pending': '⏳ Pending',
+            'paid': '✅ Paid',
+            'failed': '❌ Failed',
+            'refunded': '🔄 Refunded'
+        };
+
+        // Show SweetAlert confirmation dialog
+        const confirmResult = await Swal.fire({
+            title: 'Update Payment Status?',
+            html: `
+                <div style="text-align: left;">
+                    <p><strong>Order #{{ $order->order_number }}</strong></p>
+                    <p>Current Status: <span class="badge bg-info">${statusLabels[currentPaymentStatus]}</span></p>
+                    <p>New Status: <span class="badge bg-warning">${statusLabels[newPaymentStatus]}</span></p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Update',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d'
+        });
+
+        // If user cancelled, do nothing
+        if (!confirmResult.isConfirmed) {
+            paymentStatusSelect.value = currentPaymentStatus;
+            return;
+        }
+
+        // Disable form and button during submission
+        paymentForm.style.opacity = '0.6';
+        paymentForm.style.pointerEvents = 'none';
+
+        const originalHtml = paymentUpdateBtn.innerHTML;
+        paymentUpdateBtn.disabled = true;
+        paymentUpdateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+        paymentUpdateBtn.className = 'btn btn-warning w-100';
+
+        try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                              paymentForm.querySelector('input[name="_token"]')?.value;
+
+            // Make AJAX request to update payment status
+            const response = await fetch(
+                '{{ route("admin.orders.payment", $order->id) }}',
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        payment_status: newPaymentStatus
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Update UI elements
+                if (paymentStatusBadge) {
+                    paymentStatusBadge.className = 'badge';
+                    const badgeClasses = {
+                        'pending': 'bg-warning',
+                        'paid': 'bg-success',
+                        'failed': 'bg-danger',
+                        'refunded': 'bg-info'
+                    };
+                    paymentStatusBadge.className = `badge ${badgeClasses[newPaymentStatus] || 'bg-secondary'}`;
+                    paymentStatusBadge.textContent = statusLabels[newPaymentStatus];
+                }
+
+                // Update last modified timestamp
+                const lastUpdatedElement = document.getElementById('lastUpdated');
+                if (lastUpdatedElement) {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    });
+                    lastUpdatedElement.textContent = timeString;
+                }
+
+                // Show SweetAlert success dialog
+                await Swal.fire({
+                    title: 'Success!',
+                    html: `
+                        <div style="text-align: left;">
+                            <p><strong>Payment Status Updated</strong></p>
+                            <p>Order #{{ $order->order_number }} payment status changed to:</p>
+                            <p><span class="badge bg-success" style="font-size: 1rem; padding: 0.5rem 1rem;">${statusLabels[newPaymentStatus]}</span></p>
+                            <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">Customer has been notified via email and SMS.</p>
+                        </div>
+                    `,
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#6ba932',
+                    timer: 5000,
+                    timerProgressBar: true
+                });
+
+            } else {
+                const errorMsg = data.message || 'Failed to update payment status. Please try again.';
+                throw new Error(errorMsg);
+            }
+
+        } catch (error) {
+            console.error('❌ Payment status update error:', error.message);
+
+            // Reset form to previous value
+            paymentStatusSelect.value = currentPaymentStatus;
+
+            // Show SweetAlert error dialog
+            await Swal.fire({
+                title: 'Error Updating Payment Status',
+                text: error.message || 'An unexpected error occurred while updating the payment status. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#dc3545'
+            });
+
+        } finally {
+            // Restore button to original state
+            paymentForm.style.opacity = '1';
+            paymentForm.style.pointerEvents = 'auto';
+            paymentUpdateBtn.disabled = false;
+            paymentUpdateBtn.innerHTML = originalHtml;
+            paymentUpdateBtn.className = 'btn btn-success w-100';
+        }
+    });
+}
 
 // ===========================================
 // AUTO-HIDE STICKY ACTIONS ON SCROLL
@@ -1129,9 +1596,13 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-// Initial check on page load
+// Initial check on page load and initialize timeline
 window.addEventListener('load', function() {
-    console.log('Order page loaded. Real-time updates enabled.');
+    console.log('✅ Order #{{ $order->order_number }} page loaded successfully!');
+    console.log('📍 Real-time timeline updates enabled.');
+    console.log('⏱️ Auto-refresh interval: 30 seconds');
+    console.log('💬 Notifications: Email & SMS');
+
     // Initialize timeline with current status
     updateTimeline('{{ $order->status }}');
 });

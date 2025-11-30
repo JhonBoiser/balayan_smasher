@@ -30,6 +30,43 @@
             z-index: 0;
         }
 
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(107, 169, 50, 0.3);
+            color: #6ba932;
+            padding: 10px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: #6ba932;
+            color: white;
+            transform: translateX(-4px);
+            box-shadow: 0 6px 20px rgba(107, 169, 50, 0.4);
+        }
+
+        .back-button i {
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .back-button:hover i {
+            transform: translateX(-3px);
+        }
+
         .login-wrapper {
             position: relative;
             z-index: 1;
@@ -331,6 +368,17 @@
 
         /* Responsive */
         @media (max-width: 576px) {
+            .back-button {
+                top: 12px;
+                left: 12px;
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+
+            .back-button i {
+                font-size: 14px;
+            }
+
             .login-wrapper {
                 padding: 32px 12px 24px;
             }
@@ -391,6 +439,12 @@
     </style>
 </head>
 <body>
+    <!-- Back Button -->
+    <a href="javascript:history.back()" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        <span>Back</span>
+    </a>
+
     <div class="login-wrapper">
         <div class="login-container">
             <!-- Brand Section -->
@@ -398,23 +452,6 @@
                 <img src="https://tse1.mm.bing.net/th/id/OIP.iyU99v5mL6DEKe2bKcn8kAHaHa?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Balayan Smashers Hub" class="brand-logo">
                 <h1 class="brand-title">Welcome Back</h1>
                 <p class="brand-subtitle">Sign in to continue to your account</p>
-            </div>
-
-            <!-- Social Login Options -->
-            <div class="social-login">
-                <a href="#" class="social-btn google">
-                    <i class="fab fa-google"></i>
-                </a>
-                <a href="#" class="social-btn facebook">
-                    <i class="fab fa-facebook-f"></i>
-                </a>
-                <a href="#" class="social-btn twitter">
-                    <i class="fab fa-twitter"></i>
-                </a>
-            </div>
-
-            <div class="divider">
-                <span>OR</span>
             </div>
 
             <!-- Login Form -->
@@ -450,13 +487,6 @@
 
                 <!-- Remember Me & Forgot Password -->
                 <div class="form-options">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-                        <label class="form-check-label" for="remember">
-                            {{ __('Remember Me') }}
-                        </label>
-                    </div>
-
                     @if (Route::has('password.request'))
                         <div class="forgot-password">
                             <a href="{{ route('password.request') }}">

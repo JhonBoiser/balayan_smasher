@@ -92,6 +92,7 @@
                             <div class="col-3">
                                 <div class="position-relative">
                                     <img src="{{ asset('storage/' . $image->image_path) }}"
+                                         alt="{{ $image->alt_text ?? $product->name }}"
                                          class="img-thumbnail"
                                          style="height: 120px; width: 100%; object-fit: cover;">
                                     @if($image->is_primary)
@@ -101,6 +102,9 @@
                                             data-image-id="{{ $image->id }}" title="Delete image">
                                         <i class="bi bi-trash">X</i>
                                     </button>
+                                    <div class="mt-2">
+                                        <small class="text-muted d-block">{{ $image->original_filename ?? 'No filename' }}</small>
+                                    </div>
                                 </div>
                             </div>
                             @endforeach

@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel') - Balayan Smashers Hub</title>
-
+  <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Fixed Font Awesome link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
         integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
@@ -932,6 +933,8 @@
         <!-- Page Content -->
         @yield('content')
     </div>
+       <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -1234,8 +1237,8 @@
             searchResults.innerHTML = `
                 <div class="no-results">
                     <i class="fas fa-exclamation-triangle fa-2x mb-2 text-warning"></i>
-                    <p>Search temporarily unavailable</p>
-                    <small class="text-muted">Please try again later</small>
+                    <p>Not Found</p>
+                    <small class="text-muted">Try again</small>
                 </div>
             `;
             searchResults.classList.add('active');
